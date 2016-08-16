@@ -73,7 +73,7 @@ var cities = {
 
 
 /*---------- BASIC SETUP ----------*/
-var PORT = 4000;
+var PORT = 8080;
 app.listen(PORT, function(){
 	console.log('Express server is running at ' + PORT);
 });
