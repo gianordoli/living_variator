@@ -6,6 +6,9 @@ app.main = (function() {
 	console.log('Your code starts here!');
 
 	var socket;
+	var body = document.getElementsByTagName('body')[0];	
+	var img = document.createElement('img');
+	body.appendChild(img);	
 
 	// Initializing socket and adding listener functions
 	var socketSetup = function(){
@@ -16,12 +19,11 @@ app.main = (function() {
 		// Listeners
 		socket.on('welcome', function(data){
 			console.log(data.msg);
-			console.log(data.img);
-			var body = document.getElementsByTagName('body')[0];
-			console.log(body);
-			var img = document.createElement('img');
-			img.src = data.img;
-			body.appendChild(img);
+		});
+
+		socket.on('simulation', function(data){
+			console.log(data);
+			img.src = data;			
 		});
 
 	};
