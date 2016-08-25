@@ -1,4 +1,4 @@
-/*---------- BASIC SETUP ----------*/
+//---------- BASIC SETUP ----------
 var express		= require('express'),
 	bodyParser	= require('body-parser'),
 	fs 			= require('fs'),
@@ -29,50 +29,8 @@ app.use('/', express.static(__dirname + '/public'));
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
-
 /*---------------------------------*/
 
-
-/*-------------- APP --------------*/
-
-// VARIABLES
-var cities = {
-	london: {
-		temp_f: 61,
-		temp_c: 16,
-		wind_dir: 'S',
-		wind: 7,
-		humidity: 81
-	},
-	new_york: {
-		temp_f: 85,
-		temp_c: 16,
-		wind_dir: 'SE',
-		wind: 14,
-		humidity: 67
-	},
-	paris: {
-		temp_f: 72,
-		temp_c: 22,
-		wind_dir: 'SW',
-		wind: 3,
-		humidity: 41
-	},
-	beijing: {
-		temp_f: 68,
-		temp_c: 20,
-		wind_dir: 'N',
-		wind: 4,
-		humidity: 83
-	},
-	sao_paulo: {
-		temp_f: 82,
-		temp_c: 28,
-		wind_dir: 'W',
-		wind: 14,
-		humidity: 35
-	}
-};
 
 
 /*---------- SOCKET.IO  ----------*/
@@ -87,12 +45,34 @@ io.on('connection', function(socket) {
     /*---------- THIS ALL HAPPENS ON EVERY NEW CONNECTION ----------*/
     console.log('A new user has connected: ' + socket.id);
 
-    socket.emit('welcome', 'Welcome! your id is ' + socket.id);  // sending back a simple string
+	// CANVAS
+	var canvas 	= new Canvas(150, 150),
+		ctx		= canvas.getContext('2d');
 
-    // // The code above sent a message to the newly created connection only! (socket)
-    // // If we want to send data to every user, we need io.sockets.emmit
-    // io.sockets.emit('hey-everybody', 'hey, everybody! Please welcome ' + socket.id);
-    /*--------------------------------------------------------------*/
+
+	ctx.fillRect(0,0,150,150);   // Draw a rectangle with default settings
+	ctx.save();                  // Save the default state
+
+	ctx.fillStyle = '#09F'       // Make changes to the settings
+	ctx.fillRect(15,15,120,120); // Draw a rectangle with new settings
+
+	ctx.save();                  // Save the current state
+	ctx.fillStyle = '#FFF'       // Make changes to the settings
+	ctx.globalAlpha = 0.5;    
+	ctx.fillRect(30,30,90,90);   // Draw a rectangle with new settings
+
+	ctx.restore();               // Restore previous state
+	ctx.fillRect(45,45,60,60);   // Draw a rectangle with restored settings
+
+	ctx.restore();               // Restore original state
+	ctx.fillRect(60,60,30,30);   // Draw a rectangle with restored settings
+
+	socket.emit('welcome', {
+			msg: 'Welcome! your id is ' + socket.id,
+			img: canvas.toDataURL()
+			// img: '<img src="' +  + '" />'
+		});
+	
 
 
     /*----- THESE ARE LISTENERS! CALLED WHEN A MSG IS RECEIVED -----*/
@@ -110,35 +90,15 @@ io.on('connection', function(socket) {
     /*--------------------------------------------------------------*/
 });
 
-// CANVAS
-var canvas 	= new Canvas(150, 150),
-	ctx		= canvas.getContext('2d')
 
 
-ctx.fillRect(0,0,150,150);   // Draw a rectangle with default settings
-ctx.save();                  // Save the default state
+// var out = fs.createWriteStream(__dirname + '/state.png')
+//   , stream = canvas.createPNGStream();
 
-ctx.fillStyle = '#09F'       // Make changes to the settings
-ctx.fillRect(15,15,120,120); // Draw a rectangle with new settings
-
-ctx.save();                  // Save the current state
-ctx.fillStyle = '#FFF'       // Make changes to the settings
-ctx.globalAlpha = 0.5;    
-ctx.fillRect(30,30,90,90);   // Draw a rectangle with new settings
-
-ctx.restore();               // Restore previous state
-ctx.fillRect(45,45,60,60);   // Draw a rectangle with restored settings
-
-ctx.restore();               // Restore original state
-ctx.fillRect(60,60,30,30);   // Draw a rectangle with restored settings
-
-var out = fs.createWriteStream(__dirname + '/state.png')
-  , stream = canvas.createPNGStream();
-
-stream.on('data', function(chunk){
-  out.write(chunk);
-  console.log('yo!');
-});
+// stream.on('data', function(chunk){
+//   out.write(chunk);
+//   console.log('yo!');
+// });
 
 
 
@@ -150,4 +110,3 @@ var PORT = process.env.PORT || 4000;
 server.listen(PORT, function(){
 	console.log('Express server is running at ' + PORT);
 });
-/*---------------------------------*/

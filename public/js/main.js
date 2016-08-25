@@ -8,44 +8,28 @@ app.main = (function() {
 	var socket;
 
 	// Initializing socket and adding listener functions
-	var socketSetup = function(callback){
+	var socketSetup = function(){
 		
 		// Connect
 	    socket = io.connect();
 
 		// Listeners
 		socket.on('welcome', function(data){
-			alert(data);
+			console.log(data.msg);
+			console.log(data.img);
+			var body = document.getElementsByTagName('body')[0];
+			console.log(body);
+			var img = document.createElement('img');
+			img.src = data.img;
+			body.appendChild(img);
 		});
 
-		socket.on('hey-everybody', function(data){
-			$('body').append('<h3>'+data+'</h3>');
-		});
-
-		socket.on('bye', function(data){
-			$('body').append('<h3>'+data+'</h3>');
-		});		
-		
-		socket.on('msg-to-clients', function(data){
-			$('body').append('<p>' + data.id + ' says: ' + data.msg + '</p>');
-		});
-
-		// Call attachEvents
-		callback();
 	};
-
-	var attachEvents = function(){
-		$('#msg-box').keypress(function(e) {
-			if (e.keyCode == 13) {
-				socket.emit('msg-to-server', $('#msg-box').val());
-			}
-		});
-	};	
 
 	var init = function(){
 		console.log('Initializing app.');
 
-		socketSetup(attachEvents);	// Sending attachEvents as a callback	
+		socketSetup();	// Sending attachEvents as a callback	
 	};
 
 	return {
