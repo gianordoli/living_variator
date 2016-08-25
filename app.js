@@ -75,67 +75,57 @@ var Simulation = function(){
 	var obj = {};
 
 	// CANVAS
-	var width	= 150,
-		height	= 150,
+	var width	= 240,
+		height	= 120,
 		canvas 	= new Canvas(width, height),
 		ctx		= canvas.getContext('2d');
 
-	var posX;
-	var posY;
-	var radius;
+	var posX, posY, speedX, speedY, radius;
 
 	setup();
 
 	function setup(){
 		// console.log('Called setup');
-		posX = 0;
+		posX = 20;
 		posY = 0;
+		speedX = 2;
+		speedY = 2;
 		radius = 20;
-		setInterval(update, 500);
+		setInterval(update, 1000/60);
 		update();
 	}
 
 	function update(){
 		// console.log('Called update');
-		posX ++;
-		posY ++;
+
+		posX += speedX;
+		posY += speedY;
+
+		if(posX < 0){
+			posX = 0;
+			speedX *= -1;
+		}else if(posX > width){
+			posX = width;
+			speedX *= -1;
+		}
+
+		if(posY < 0){
+			posY = 0;
+			speedY *= -1;
+		}else if(posY > height){
+			posY = height;
+			speedY *= -1;
+		}		
+
 		draw();
 	}	
 
 	function draw(){
 		// console.log('Called draw');
-	    // ctx.fillStyle = 'blue';
-	    // ctx.arc(posX, posY, radius, 2*Math.PI);
-	    // ctx.fill();
-
-	    // io.sockets.emit('simulation', canvas.toDataURL());
-ctx.clearRect(0, 0, width, height);
-ctx.fillStyle = '#09F'       // Make changes to the settings
-ctx.fillRect(posX, posY, radius, radius);   // Draw a rectangle with default settings
-io.sockets.emit('simulation', canvas.toDataURL());
-// ctx.save();                  // Save the default state
-
-// ctx.fillStyle = '#09F'       // Make changes to the settings
-// ctx.fillRect(15,15,120,120); // Draw a rectangle with new settings
-
-// ctx.save();                  // Save the current state
-// ctx.fillStyle = '#FFF'       // Make changes to the settings
-// ctx.globalAlpha = 0.5;    
-// ctx.fillRect(30,30,90,90);   // Draw a rectangle with new settings
-
-// ctx.restore();               // Restore previous state
-// ctx.fillRect(45,45,60,60);   // Draw a rectangle with restored settings
-
-// ctx.restore();               // Restore original state
-// ctx.fillRect(60,60,30,30);   // Draw a rectangle with restored settings
-
-
-		// var out = fs.createWriteStream(__dirname + '/state.png')
-		//   , stream = canvas.createPNGStream();
-
-		// stream.on('data', function(chunk){
-		//   out.write(chunk);
-		// });	    
+		ctx.clearRect(0, 0, width, height);
+		ctx.fillStyle = '#09F';
+		ctx.fillRect(posX, posY, radius, radius);
+		io.sockets.emit('simulation', canvas.toDataURL());
 	}
 }
 
