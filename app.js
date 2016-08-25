@@ -25,6 +25,11 @@ app.use(function(req, res, next) {
 });
 
 app.use('/', express.static(__dirname + '/public'));
+
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
+
+
 /*---------------------------------*/
 
 
@@ -69,6 +74,42 @@ var cities = {
 	}
 };
 
+
+/*---------- SOCKET.IO  ----------*/
+
+// .on(identifier, callback(data))      listens to 
+// .emit(identifier, data)              sends data to every user
+// .broadcast.emit(identifier, data)    sends data to every user, except the newly created
+
+io.on('connection', function(socket) {
+
+    
+    /*---------- THIS ALL HAPPENS ON EVERY NEW CONNECTION ----------*/
+    console.log('A new user has connected: ' + socket.id);
+
+    socket.emit('welcome', 'Welcome! your id is ' + socket.id);  // sending back a simple string
+
+    // // The code above sent a message to the newly created connection only! (socket)
+    // // If we want to send data to every user, we need io.sockets.emmit
+    // io.sockets.emit('hey-everybody', 'hey, everybody! Please welcome ' + socket.id);
+    /*--------------------------------------------------------------*/
+
+
+    /*----- THESE ARE LISTENERS! CALLED WHEN A MSG IS RECEIVED -----*/
+    // A listener for socket disconnection
+    socket.on('disconnect', function() {
+        io.sockets.emit('bye', 'See you, ' + socket.id + '!');
+    });    
+
+    socket.on('msg-to-server', function(data) {
+        io.sockets.emit('msg-to-clients', {
+            id: socket.id,
+            msg: data
+        });
+    });
+    /*--------------------------------------------------------------*/
+});
+
 // CANVAS
 var canvas 	= new Canvas(150, 150),
 	ctx		= canvas.getContext('2d')
@@ -106,7 +147,7 @@ stream.on('data', function(chunk){
 
 /*---------- BASIC SETUP ----------*/
 var PORT = process.env.PORT || 4000;
-app.listen(PORT, function(){
+server.listen(PORT, function(){
 	console.log('Express server is running at ' + PORT);
 });
 /*---------------------------------*/
