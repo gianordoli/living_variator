@@ -22,8 +22,12 @@ app.main = (function() {
 		});
 
 		socket.on('simulation', function(data){
-			console.log(data);
-			img.src = data;			
+			//console.log(data);
+			if (data.type == 'dataURL')
+				img.src = data.buffer;
+			else if (data.type == 'png64')
+				img.src = 'data:image/png;base64,' + data.buffer;
+			console.log(data.buffer);
 		});
 
 	};

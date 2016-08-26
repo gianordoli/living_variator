@@ -72,75 +72,148 @@ io.on('connection', function(socket) {
 
 var Simulation = function(){
 
-	var obj = {};
+	//var obj = {};
 
 	// CANVAS
-	var width	= 240,
-		height	= 120,
+	var width	= 500,
+		height	= 500,
 		canvas 	= new Canvas(width, height),
-		ctx		= canvas.getContext('2d');
+		ctx		= canvas.getContext('2d'),
+		nFramesThisSec = 0,  // frame count
+		fps = 0; // fps tracker
 
-	var posX, posY, speedX, speedY, radius;
 
-	setup();
+	var particles = [];
+	function createParticle(){
+
+		// radius
+		this.radius = 50;
+
+		// random pos
+		this.x = this.radius + Math.random()*(width-this.radius*2); // btwn 50 and 450
+		this.y = this.radius + Math.random()*(height-this.radius*2);
+
+		// random velocity
+		this.vx = Math.random()*10-5; // -5 to 5
+		this.vy = Math.random()*10-5;
+
+		// color
+		this.color = "blue";
+	}
+
+	function getFps(){
+
+		fps = nFramesThisSec;
+		nFramesThisSec = 0;
+
+	}
+
 
 	function setup(){
 		// console.log('Called setup');
-		posX = 20;
-		posY = 0;
-		speedX = 2;
-		speedY = 2;
-		radius = 20;
-		setInterval(update, 1000/60);
+
+		for (var i=0; i<5; i++){
+			particles.push(new createParticle());
+		}
+
+		setInterval(update, 1000/200);
+		setInterval(getFps, 1000); // every second update fps
 		update();
+
 	}
 
 	function update(){
 		// console.log('Called update');
 
-		posX += speedX;
-		posY += speedY;
+		for (var i=0; i<particles.length; i++){
 
-		if(posX < 0){
-			posX = 0;
-			speedX *= -1;
-		}else if(posX > width){
-			posX = width;
-			speedX *= -1;
+			var p = particles[i];
+
+			// movement
+
+			p.x += p.vx;
+			p.y += p.vy;
+
+			// bounce on bounds
+
+			if (p.x <= p.radius || p.x >= width-p.radius){
+				p.vx *= -1;
+			}
+			if (p.y <= p.radius || p.y >= height-p.radius){
+				p.vy *= -1;
+			}	
 		}
-
-		if(posY < 0){
-			posY = 0;
-			speedY *= -1;
-		}else if(posY > height){
-			posY = height;
-			speedY *= -1;
-		}		
 
 		draw();
 	}	
 
 	function draw(){
 		// console.log('Called draw');
-		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = '#09F';
-		ctx.fillRect(posX, posY, radius, radius);
-		io.sockets.emit('simulation', canvas.toDataURL());
+
+		// bg
+		ctx.fillStyle = "black";
+		ctx.fillRect(0,0,width,height);
+
+		// particles
+		for (var i=0; i<particles.length; i++){
+
+			var p = particles[i];
+
+			// circle
+			ctx.beginPath();
+			ctx.fillStyle = p.color;
+			ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
+			ctx.fill();
+
+		}
+
+		// fps draw
+		ctx.fillStyle = "white";
+		ctx.fillText("fps: " + fps.toFixed(2), 5,15);
+
+		nFramesThisSec++;
+
+		emitCanvas(); // send to client (if any)
+		//saveToPng(); // save canvas to disk
 	}
+
+	function emitCanvas(filename){
+		if (connectedUsers > 0){
+			//io.sockets.emit('simulation', { type: 'dataURL', buffer: canvas.toDataURL()});
+			//io.sockets.emit('simulation', filename);
+			canvas.toBuffer(function(err,buf){
+				if (err) throw err;
+			 	io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')});
+			});
+		}
+	}
+
+	function saveToPng(){
+
+		var out = fs.createWriteStream(__dirname + '/public/frame_' + nFramesThisSec + '.png'),
+  		stream = canvas.createPNGStream();
+
+		stream.on('data', function(chunk){
+	  		out.write(chunk);
+		});
+
+		stream.on('end', function(){
+			console.log('saved frame_' + nFramesThisSec + '.png, fps: '+ fps);
+			var fn = 'frame_'+nFramesThisSec+'.png';
+			emitCanvas(fn);
+		});
+	}
+	
+
+	setup();
+
+
 }
 
 var simulation = new Simulation();
 
 
 
-
-// var out = fs.createWriteStream(__dirname + '/state.png')
-//   , stream = canvas.createPNGStream();
-
-// stream.on('data', function(chunk){
-//   out.write(chunk);
-//   console.log('yo!');
-// });
 
 
 
