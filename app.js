@@ -179,11 +179,12 @@ var Simulation = function(){
 
 	function emitCanvas(filename){
 		if (connectedUsers > 0){
-			//io.sockets.emit('simulation', { type: 'dataURL', buffer: canvas.toDataURL()});
-			//io.sockets.emit('simulation', filename);
+			//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()});
+			//io.sockets.emit('simulation', { type: 'URL': buffer: filename });
 			canvas.toBuffer(function(err,buf){
 				if (err) throw err;
-			 	io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')});
+			 	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')});
+			 	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf})
 			});
 		}
 	}

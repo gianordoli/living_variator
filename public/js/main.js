@@ -23,11 +23,23 @@ app.main = (function() {
 
 		socket.on('simulation', function(data){
 			//console.log(data);
-			if (data.type == 'dataURL')
+			if (data.type == 'URL')
 				img.src = data.buffer;
+			
 			else if (data.type == 'png64')
 				img.src = 'data:image/png;base64,' + data.buffer;
-			console.log(data.buffer);
+
+			else if (data.type == 'rawbuf'){
+				var uint8arr = new Uint8Array(data.buffer);
+				var binary = '';
+				for (var i=0; i<uint8arr.length; i++){
+					binary+= String.fromCharCode(uint8arr[i]);
+				}
+				var base64string = window.btoa(binary);
+				img.src = 'data:image/png;base64,' + base64string;
+			}
+
+			//console.log(data);
 		});
 
 	};
