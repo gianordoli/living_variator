@@ -1,9 +1,8 @@
 //---------- BASIC SETUP ----------
 var express		= require('express'),
 	bodyParser	= require('body-parser'),
-	fs 			= require('fs'),
-	Canvas 		= require('canvas');
-
+	fs 			= require('fs');
+	//Canvas 		= require('canvas');
 
 var app = express();						// our Express app
 
@@ -70,155 +69,34 @@ io.on('connection', function(socket) {
     /*--------------------------------------------------------------*/
 });
 
-var Simulation = function(){
 
-	//var obj = {};
+/*---------- SIMULATION  ----------*/
 
-	// CANVAS
-	var width	= 500,
-		height	= 500,
-		canvas 	= new Canvas(width, height),
-		ctx		= canvas.getContext('2d'),
-		nFramesThisSec = 0,  // frame count
-		fps = 0; // fps tracker
+var Simulation = require('./Simulation');
 
+var simulation = new Simulation(1280,720,200,10); // width, height, fps
+// simulation is now running using setInterval
 
-	var particles = [];
-	function createParticle(){
-
-		// radius
-		this.radius = 50;
-
-		// random pos
-		this.x = this.radius + Math.random()*(width-this.radius*2); // btwn 50 and 450
-		this.y = this.radius + Math.random()*(height-this.radius*2);
-
-		// random velocity
-		this.vx = Math.random()*10-5; // -5 to 5
-		this.vy = Math.random()*10-5;
-
-		// color
-		this.color = "blue";
-	}
-
-	function getFps(){
-
-		fps = nFramesThisSec;
-		nFramesThisSec = 0;
-
-	}
-
-
-	function setup(){
-		// console.log('Called setup');
-
-		for (var i=0; i<5; i++){
-			particles.push(new createParticle());
-		}
-
-		setInterval(update, 1000/200);
-		setInterval(getFps, 1000); // every second update fps
-		update();
-
-	}
-
-	function update(){
-		// console.log('Called update');
-
-		for (var i=0; i<particles.length; i++){
-
-			var p = particles[i];
-
-			// movement
-
-			p.x += p.vx;
-			p.y += p.vy;
-
-			// bounce on bounds
-
-			if (p.x <= p.radius || p.x >= width-p.radius){
-				p.vx *= -1;
-			}
-			if (p.y <= p.radius || p.y >= height-p.radius){
-				p.vy *= -1;
-			}	
-		}
-
-		draw();
-	}	
-
-	function draw(){
-		// console.log('Called draw');
-
-		// bg
-		ctx.fillStyle = "black";
-		ctx.fillRect(0,0,width,height);
-
-		// particles
-		for (var i=0; i<particles.length; i++){
-
-			var p = particles[i];
-
-			// circle
-			ctx.beginPath();
-			ctx.fillStyle = p.color;
-			ctx.arc(p.x,p.y,p.radius,0,Math.PI*2);
-			ctx.fill();
-
-		}
-
-		// fps draw
-		ctx.fillStyle = "white";
-		ctx.fillText("fps: " + fps.toFixed(2), 5,15);
-
-		nFramesThisSec++;
-
-		emitCanvas(); // send to client (if any)
-		//saveToPng(); // save canvas to disk
-	}
-
-	function emitCanvas(filename){
-		if (connectedUsers > 0){
-			//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()});
-			//io.sockets.emit('simulation', { type: 'URL': buffer: filename });
-			canvas.toBuffer(function(err,buf){
-				if (err) throw err;
-			 	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')});
-			 	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf})
-			});
-		}
-	}
-
-	function saveToPng(){
-
-		var out = fs.createWriteStream(__dirname + '/public/frame_' + nFramesThisSec + '.png'),
-  		stream = canvas.createPNGStream();
-
-		stream.on('data', function(chunk){
-	  		out.write(chunk);
-		});
-
-		stream.on('end', function(){
-			console.log('saved frame_' + nFramesThisSec + '.png, fps: '+ fps);
-			var fn = 'frame_'+nFramesThisSec+'.png';
-			emitCanvas(fn);
+var emitCanvas = function(filename){
+	if (connectedUsers > 0){
+		//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()}); // send dataURL
+		//io.sockets.emit('simulation', { type: 'URL': buffer: filename }); // send filename of saved png
+		simulation.canvas.toBuffer(function(err,buf){
+			if (err) throw err;
+		 	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')}); // send img buffer as base64
+		 	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf}); // send raw img buffer (to encode base64 on client)
 		});
 	}
-	
-
-	setup();
-
-
 }
 
-var simulation = new Simulation();
+//setInterval(emitCanvas, 1000/20); // draw to client at specific fps
 
+simulation.onDraw = emitCanvas;
 
-
-
-
+//simulation.on('draw',emitCanvas); // hopefully!
 
 /*---------------------------------*/
+
 
 
 /*---------- BASIC SETUP ----------*/
