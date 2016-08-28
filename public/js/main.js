@@ -12,6 +12,63 @@ app.main = (function(simulation) {
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
 
+	var loadData = function(){
+		console.log('Called loadData');
+		$.getJSON('dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json', function(json){
+			console.log('Data received.');
+			console.log(json);
+			for(var i = 0; i < json.length; i++){
+				json[i]['Date Time'] = new Date(json[i]['Date Time']);				
+			}
+			console.log(json);
+		});
+	}
+
+	var drawUI = function(){
+		var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
+		var controls = [
+			{envVar: 'radius', inUse: false},
+			{envVar: 'acceleration', inUse: false},
+			{envVar: 'growthRate', inUse: false},
+			{envVar: 'age', inUse: false},
+			{envVar: 'deathWait', inUse: false}
+		];
+
+		var inputList = $('<ul id="input-list"></ul>');		
+		for(var i = 0; i < inputs.length; i++){
+			var listItem = $('<li>'+inputs[i]+'</li>').draggable({
+				cursor: 'move',
+				containment: 'document',
+				helper: myHelper
+			});
+			$(inputList).append(listItem);
+		}
+
+		function myHelper(event) {
+		  return '<div class="connector"></div>';
+		}
+
+
+		var controlList = $('<ul id="control-list"></ul>');		
+		for(var i = 0; i < controls.length; i++){
+			var listItem = $('<li>'+controls[i]['envVar']+'</li>').droppable({
+		      drop: handleDropEvent
+		    });
+			$(controlList).append(listItem);
+		}
+
+		function handleDropEvent( event, ui ) {
+			var draggable = ui.draggable;
+			console.log($(draggable).html());
+		}
+
+
+		$('body').append(inputList)
+			.append(controlList)
+			;
+	}
+
+
 	// Initializing socket and adding listener functions
 	var socketSetup = function(){
 		
@@ -56,8 +113,9 @@ app.main = (function(simulation) {
 
 	var init = function(){
 		console.log('Initializing app.');
-
-		socketSetup();	// Sending attachEvents as a callback	
+		socketSetup();
+		loadData();
+		drawUI();
 	};
 
 	return {

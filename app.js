@@ -96,7 +96,8 @@ var emitCanvas = function(filename){
 
 //setInterval(emitCanvas, 1000/20); // draw to client at specific fps
 
-simulation.onDraw = emitCanvas;
+// UNCOMMENT LATER!!!
+// simulation.onDraw = emitCanvas;
 
 
 /*---------------------------------*/
