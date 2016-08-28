@@ -16,17 +16,19 @@ app.main = (function(simulation) {
 		console.log('Called loadData');
 		$.getJSON('dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json', function(json){
 			console.log('Data received.');
-			console.log(json);
+			// console.log(json);
 			for(var i = 0; i < json.length; i++){
 				json[i]['Date Time'] = new Date(json[i]['Date Time']);				
 			}
-			console.log(json);
+			// console.log(json);
 		});
 	}
 
-	var drawUI = function(){
-		var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
-		var controls = ['radius', 'acceleration', 'growth-rate', 'age', 'death-wait'];
+	var drawUI = function(inputs, controls, connections){
+		console.log('Called drawUI');
+		console.log(inputs);
+		console.log(controls);
+		console.log(connections);
 
 		// INPUTS
 		var inputList = $('<ul id="input-list"></ul>');		
@@ -67,6 +69,7 @@ app.main = (function(simulation) {
 		var svgHeight = 200;
 		var svgCanvas = makeSVG('svg', {id: 's', width: svgWidth, height: svgHeight});
 
+		// You can't use JQuery to append SVG elements, so...
 		function makeSVG(tag, attrs) {
             var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
             for (var k in attrs)
@@ -75,6 +78,7 @@ app.main = (function(simulation) {
         }
 
 		function drawConnection(input, control){
+			console.log(input);
 			var a = $(input).index();
 			var b = $(control).index();
 			var y1 = svgHeight - 5;
@@ -95,10 +99,33 @@ app.main = (function(simulation) {
 	        };
 		}
 
+		// When updating, loop through all lines and get a list of input -> control
+		var btUpdate = $('<button>Update</button>')
+			.off('click').on('click', function(){
+				var updatedConnections = [];				
+				var lines = document.getElementsByTagName('line');
+				for(var i = 0; i < lines.length; i++){
+					updatedConnections.push({
+						input: lines[i].getAttribute('input'),
+						control: lines[i].getAttribute('control') 
+					});
+				}
+				console.log(updatedConnections);
+				socket.emit('update-connections', updatedConnections);
+			});
+
 		$('body').append(controlList);
 		body.appendChild(svgCanvas);
 		$('body').append(inputList);
-		
+		$('body').append(btUpdate);	
+
+
+        // Drawing connections read from server	
+        for(var i = 0; i < connections.length; i++){
+        	var input = document.getElementById(connections[i]['input']);
+        	var control = document.getElementById(connections[i]['control']);
+        	drawConnection(input, control);
+        }
 	}
 
 
@@ -112,6 +139,11 @@ app.main = (function(simulation) {
 		socket.on('welcome', function(data){
 			console.log(data.msg);
 		});
+
+		socket.on('draw-connections', function(data){
+			console.log(data);
+			drawUI(data.inputs, data.controls, data.connections);
+		});		
 
 		socket.on('simulation', function(data){
 			var img = new Image();
@@ -148,7 +180,6 @@ app.main = (function(simulation) {
 		console.log('Initializing app.');
 		socketSetup();
 		loadData();
-		drawUI();
 	};
 
 	return {

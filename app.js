@@ -50,6 +50,11 @@ io.on('connection', function(socket) {
 
 	socket.emit('welcome', { msg: 'Welcome! your id is ' + socket.id });
 	
+    socket.emit('draw-connections', {
+        inputs: inputs,
+        controls: controls,
+        connections: connections
+    });
 
 
     /*----- THESE ARE LISTENERS! CALLED WHEN A MSG IS RECEIVED -----*/
@@ -66,8 +71,24 @@ io.on('connection', function(socket) {
             msg: data
         });
     });
+
+    socket.on('connections-update', function(data){
+        console.log(data);
+    });
     /*--------------------------------------------------------------*/
 });
+
+/*---------- DATA CONNECTION  ----------*/
+var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
+var controls = ['radius', 'acceleration', 'growth-rate', 'age', 'death-wait'];
+// Assigning random connections to start
+var connections = [];
+for(var i = 0; i < controls.length; i++){
+    connections.push({
+        input: inputs[i],
+        control: controls[i]
+    });
+}
 
 
 /*---------- SIMULATION  ----------*/
