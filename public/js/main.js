@@ -60,7 +60,9 @@ app.main = (function(simulation) {
 
 		// SVG
 		var textLineHeight = 24;
-		var svgCanvas = makeSVG('svg', {id: 's', width: 200, height: 500});
+		var svgWidth = 200;
+		var svgHeight = inputs.length * textLineHeight;
+		var svgCanvas = makeSVG('svg', {id: 's', width: svgWidth, height: svgHeight});
 
 		function makeSVG(tag, attrs) {
             var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -72,10 +74,10 @@ app.main = (function(simulation) {
 		function drawConnection(input, output){
 			var a = $(input).index();
 			var b = $(output).index();
-			var x1 = 0;
-			var x2 = 200;
-			var y1 = (a * textLineHeight) + textLineHeight;
-			var y2 = (b * textLineHeight) + textLineHeight;
+			var x1 = 5;
+			var x2 = svgWidth - 5;
+			var y1 = (a * textLineHeight) + textLineHeight/2;
+			var y2 = (b * textLineHeight) + textLineHeight/2;
 			var line = makeSVG('line', {
 				x1: x1, y1: y1, x2: x2, y2: y2,
 				input: $(input).attr('id'),
@@ -83,7 +85,8 @@ app.main = (function(simulation) {
 			});
 	        document.getElementById('s').appendChild(line);
 	        line.onmousedown = function() {
-	            console.log(this);
+	            // console.log(this);
+	            this.parentNode.removeChild(this);
 	        };
 		}
 
