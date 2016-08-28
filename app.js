@@ -74,18 +74,23 @@ io.on('connection', function(socket) {
 
 var Simulation = require('./Simulation');
 
-var simulation = new Simulation(1280,720,200,10); // width, height, fps
+var simulation = new Simulation(1280,720,100,30,false); // width, height, fps, drawOnServer?
 // simulation is now running using setInterval
 
 var emitCanvas = function(filename){
 	if (connectedUsers > 0){
 		//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()}); // send dataURL
 		//io.sockets.emit('simulation', { type: 'URL': buffer: filename }); // send filename of saved png
-		simulation.canvas.toBuffer(function(err,buf){
-			if (err) throw err;
-		 	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')}); // send img buffer as base64
-		 	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf}); // send raw img buffer (to encode base64 on client)
-		});
+		// simulation.canvas.toBuffer(function(err,buf){
+		// 	if (err) throw err;
+		//  	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')}); // send img buffer as base64
+		//  	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf}); // send raw img buffer (to encode base64 on client)
+		// });
+        io.sockets.emit('simulation', {
+            type: 'cellData',
+            buffer: simulation.cells, 
+            info: { width : simulation.width, height: simulation.height, fps: simulation.fps } 
+        });
 	}
 }
 
@@ -93,7 +98,6 @@ var emitCanvas = function(filename){
 
 simulation.onDraw = emitCanvas;
 
-//simulation.on('draw',emitCanvas); // hopefully!
 
 /*---------------------------------*/
 

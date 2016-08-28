@@ -4,7 +4,7 @@
 // ----------
 
 
-function Cell(x, y, radius, vx, vy, neighborhoodRadius, deathWait){
+function Cell(x, y, radius, vx, vy, neighborhoodRadius, deathWait, color, nColor){
 
 	var self = this;
 	self.x = x;
@@ -14,7 +14,11 @@ function Cell(x, y, radius, vx, vy, neighborhoodRadius, deathWait){
 	self.vy = vy;
 	self.neighborhoodRadius = neighborhoodRadius;
 	self.deathWait = deathWait;
-
+	self.deathTick = 0;
+	self.color = color;
+	self.nColor = nColor;
+	self.dead = false;
+	self.collided = false;
 }
 
 Cell.prototype.update = function(accelX, accelY, neighborhoodRadius, deathWait){
