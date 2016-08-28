@@ -1,0 +1,1 @@
+/usr/local/Cellar/cairo/1.12.16/lib/pkgconfig/cairo.pc

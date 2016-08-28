@@ -255,7 +255,7 @@ Simulation.prototype.update = function(){
 	// ---------------------- now spawn new cells based on collisions
 	
 	if (collisions.size > 0) console.log (collisions.size+' collisions');
-	for (var idx of collisions){
+	for (var idx in collisions){
 
 		var c = self.cells[idx];
 
