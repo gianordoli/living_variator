@@ -31,7 +31,7 @@ Cell.prototype.update = function(accelX, accelY, neighborhoodRadius, deathWait){
 	this.neighborhoodRadius = neighborhoodRadius;
 	this.deathWait = deathWait;
 	this.age++;
-	this.radius++; // grow
+	this.radius+=0.5; // grow
 }
 
 
