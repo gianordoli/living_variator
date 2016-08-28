@@ -45,13 +45,16 @@ function Simulation (width,height,numCells,framerate, drawOnServer){ // construc
 	// populate cell array
 	for (var i=0; i<numCells; i++){
 
-		var x = self.envVar.radius + Math.random()*(self.width-self.envVar.radius*2); // pos x - between radius and width-radius
-		var y = self.envVar.radius + Math.random()*(self.height-self.envVar.radius*2); // pos y - between radius and height-radius
+		// pos
+		var x = self.envVar.radius + Math.random()*(self.width-self.envVar.radius*2); // between radius and width-radius
+		var y = self.envVar.radius + Math.random()*(self.height-self.envVar.radius*2);
+		// velocity
 		var vx, vy;
 		do {
-			vx = Math.random()*2 -1; // vel x - between -1 and 1
-			vy = Math.random()*2 -1; // vel y - between -1 and 1
+			vx = Math.random()*2 -1; // between -1 and 1
+			vy = Math.random()*2 -1;
 		} while (vx == 0 && vy == 0); // must have some initial velocity
+
 		var color = { h: 240, //0-360 hue... 240 blue, 360 red
 					  s: 100, //% sat
 					  l: 60, //% luma (100 == white)
@@ -67,15 +70,17 @@ function Simulation (width,height,numCells,framerate, drawOnServer){ // construc
 
 	// ----------------- LOOP intervals
 
-	// average the per-frame fps every second
-	setInterval(function(){
-		self.updateFps(self);
-	}, 1000);
-
 	// update() function runs at target fps (update calls draw)
 	setInterval(function(){
+
 		self.update(self);
 	}, 1000/self.targetFps); 
+
+	// average the per-frame fps every second
+	setInterval(function(){
+
+		self.updateFps(self);
+	}, 1000);
 
 
 }
@@ -103,15 +108,16 @@ Simulation.prototype.dist = function(x1,y1,x2,y2){
 	return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
 }
 
-// ------------------------ util: mag
+// ------------------------ util: magnitude
 Simulation.prototype.mag = function(x,y){
 	return Math.sqrt(x*x + y*y);
 }
 
 
-// ---------------------- util: update fps
+// ---------------------- update fps (to be run every second)
 
-Simulation.prototype.updateFps = function(self){ // util to update fps every second (simply counts frames)
+Simulation.prototype.updateFps = function(){ // util to update fps every second (simply counts frames)
+	var self = this;
 	self.fps = self.sumFps / self.nFramesThisSec;
 	self.sumFps = 0;
 	self.nFramesThisSec = 0;
@@ -120,12 +126,15 @@ Simulation.prototype.updateFps = function(self){ // util to update fps every sec
 
 // ---------------------- returns array of neighbor data of a cell in form: { cellIndex, distance }
 
-Simulation.prototype.getNeighbors = function(self, cellIndex){
+Simulation.prototype.getNeighbors = function(cellIndex){
+
+	var self = this;
 
 	var c = self.cells[cellIndex];
+
 	var nR = c.neighborhoodRadius;
 
-	var nbs = []; // neighbors
+	var nbs = [];
 
 	for (var i=0; i<self.cells.length; i++){
 
@@ -133,15 +142,11 @@ Simulation.prototype.getNeighbors = function(self, cellIndex){
 
 		var cn = self.cells[i];
 
-		// check if within general bounding box
-		if (cn.x > c.x-nR && cn.x < c.x+nR && cn.y > c.y-nR && cn.y < c.y+nR){
+		// check if neighbor
+		var dist = c.distToNeighbor(cn.x,cn.y);
+		if (dist < c.neighborhoodRadius){
 
-			// calc actual dist
-			var dist = Math.sqrt(Math.pow(c.x-cn.x,2) + Math.pow(c.y-cn.y,2));
-
-			if (dist < nR){
-				nbs.push({ cellIndex: i, distance: dist});
-			}
+			nbs.push({ cellIndex: i, distance: dist});
 		}
 	}
 
@@ -150,9 +155,10 @@ Simulation.prototype.getNeighbors = function(self, cellIndex){
 
 // ---------------------- update loop
 
-Simulation.prototype.update = function(self){
+Simulation.prototype.update = function(){
 
-	//var collisions = new Map(); // keeps index pairs as key and x,y locations as values of collisions
+	var self = this;
+
 	var collisions = new Set(); // keeps set of indexes of cells that collided
 	var deaths = new Set(); // keeps set of indexes of cells that died
 
@@ -162,36 +168,33 @@ Simulation.prototype.update = function(self){
 
 		// ---------------------- check for neighbors
 
-		var neighbors = self.getNeighbors(self, i);
+		var neighbors = self.getNeighbors(i);
 		var numNeighbors = neighbors.length;
 
-		for (var n=0; n<numNeighbors; n++){
+		// ---------------------- check for collisions
 
-			var nIdx = neighbors[n].cellIndex;
-			var nDist = neighbors[n].distance;
-			var nCell = self.cells[nIdx];
+		if (c.age > c.deathWait){ // this cell must be old enough to collide
 
-			// ---------------------- check for collisions
+			for (var n=0; n<numNeighbors; n++){
 
-			if (nDist < c.radius){
+				var nIdx = neighbors[n].cellIndex;
+				var nDist = neighbors[n].distance;
 
-				// later, kill cell
-				c.dead = true;
-				deaths.add(i);
+				var nCell = self.cells[nIdx];
 
-				// and spawn more
-				c.collided = true;
-				collisions.add(i);
+				if (nCell.age > nCell.deathWait){ // other cell must be old enough to collide
 
-				// var c1 = Math.min(i,nIdx);
-				// var c2 = Math.max(i,nIdx);
-				// var cP = [c1,c2];
+					if (nDist < c.radius){
 
-				// var mX = (nCell.x+c.x)*0.5;
-				// var mY = (nCell.y+c.y)*0.5;
-				// var mPt = {x: mX, y: mY};
+						// later, kill cell
+						c.dead = true;
+						deaths.add(i);
 
-				// collisions.set(cP, mPt);
+						// and spawn more
+						c.collided = true;
+						collisions.add(i);
+					}
+				}
 			}
 		}
 
@@ -250,9 +253,8 @@ Simulation.prototype.update = function(self){
 	}
 
 	// ---------------------- now spawn new cells based on collisions
-
-	console.log('collisions: '+collisions.size);
 	
+	if (collisions.size > 0) console.log (collisions.size+' collisions');
 	for (var idx of collisions){
 
 		var c = self.cells[idx];
@@ -263,15 +265,18 @@ Simulation.prototype.update = function(self){
 		// create 2 new cells
 		for (var j=0; j<2; j++){
 
-			var vx = Math.random()*2-1,
-				vy = Math.random()*2-1;
+			var vx, vy;
+			do {
+				vx = Math.random()*2 -1; // between -1 and 1
+				vy = Math.random()*2 -1;
+			} while (vx == 0 && vy == 0); // must have some initial velocity
 
-			var magV = self.mag(vx,vy),
+			var magV = self.mag(vx,vy), // calc magnitude and direction of velocity
 				normX = vx/magV,
 				normY = vy/magV;
 
-			var x = c.x + normX*c.radius*4,
-				y = c.y + normY*c.radius*4;
+			var x = c.x + normX*c.radius*2,
+				y = c.y + normY*c.radius*2;
 
 			self.cells.push( 
 				new Cell(  // create cell
@@ -288,13 +293,14 @@ Simulation.prototype.update = function(self){
 	// ---------------------- now, delete dead cells from cell array
 
 	var deathsArray = Array.from(deaths).sort(); // cvt to sorted array to iterate backwards
-	console.log('deathsArray size '+deathsArray.length);
+	if (deathsArray.length > 0) console.log(deathsArray.length+' deaths');
 
 	for (var i=deathsArray.length-1; i>=0; i--){
 
-		console.log('cell '+deathsArray[i]+' died, RIP');
 		self.cells.splice(deathsArray[i],1); // remove from array
 	}
+	if (deathsArray.length > 0) console.log(this.cells.length+' cells now alive')
+
 	
 
 	// ---------------------- draw on server?
@@ -320,7 +326,9 @@ Simulation.prototype.update = function(self){
 
 // ---------------------- draw loop
 
-Simulation.prototype.draw = function(self){
+Simulation.prototype.draw = function(){
+
+	var self = this;
 
 	// bg
 	self.ctx.fillStyle = "rgba(0,0,0,0.1)";

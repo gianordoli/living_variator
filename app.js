@@ -74,7 +74,7 @@ io.on('connection', function(socket) {
 
 var Simulation = require('./Simulation');
 
-var simulation = new Simulation(1280,720,100,30,false); // width, height, fps, drawOnServer?
+var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
 // simulation is now running using setInterval
 
 var emitCanvas = function(filename){
