@@ -2,7 +2,7 @@
 
 var app = app || {};
 
-app.main = (function() {
+app.main = (function(simulation) {
 	console.log('Your code starts here!');
 
 	var socket;
@@ -11,48 +11,6 @@ app.main = (function() {
 	//body.appendChild(img);	
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
-	ctx.fillStyle = "black";
-	ctx.fillRect(0,0,canvas.width,canvas.height);
-
-	var drawCellData = function(cells, info){
-
-		// bg
-		ctx.globalCompositeOperation = "source-over"
-
-		ctx.fillStyle = "rgba(0,0,0,0.2)";
-		ctx.fillRect(0,0,canvas.width,canvas.height);
-
-		ctx.globalCompositeOperation = "lighten";
-
-		// draw cells
-		for (var i=0; i<cells.length; i++){
-
-			var c = cells[i];
-
-			// draw neighborhood radius
-			ctx.beginPath();
-			var nColor = 'hsla('+c.nColor.h+','+c.nColor.s+'%,'+c.nColor.l+'%,0.1)';
-			ctx.fillStyle = nColor;
-			ctx.arc( c.x,c.y, c.neighborhoodRadius,0,Math.PI*2 );
-			ctx.fill();
-
-			// draw cell radius
-			ctx.beginPath();
-			var color = 'hsla('+c.color.h+','+c.color.s+'%,'+c.color.l+'%,'+c.color.a+')';
-			ctx.fillStyle = color;
-			ctx.arc( c.x,c.y,c.radius,0,Math.PI*2 );
-			ctx.fill();
-
-		}
-
-		ctx.globalCompositeOperation = "source-over";
-
-		// fps draw
-		ctx.fillStyle = "rgba(0,0,0,0.6)";
-		ctx.fillRect(0,0,60,20);
-		ctx.fillStyle = "#fff";
-		ctx.fillText("fps: " + info.fps.toFixed(2), 5,15);
-	}
 
 	// Initializing socket and adding listener functions
 	var socketSetup = function(){
@@ -89,7 +47,7 @@ app.main = (function() {
 			}
 			else if (data.type == 'cellData'){ // raw cell data for client-canvas drawing
 				console.log(data);
-				drawCellData(data.buffer,data.info);
+				simulation.drawCellData(data.buffer, data.info, ctx);
 			}
 
 		});
@@ -106,6 +64,6 @@ app.main = (function() {
 		init: init
 	};
 
-})();
+})(simulation);
 
 window.addEventListener('DOMContentLoaded', app.main.init);
