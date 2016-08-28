@@ -1,24 +1,28 @@
 /* your style begins here */
+
 ul{
-	display: inline-block;
-	vertical-align: top;
+	display: block;
 	list-style-type: none;
 	padding: 0 5px;
 	margin: 0;
 }
 
-#input-list{
-	text-align: right;
+#input-list li{
+	vertical-align: top;
+	width: calc(100% / 20);		
 }
 
-#control-list{
-	text-align: left;
+#control-list li{
+	vertical-align: bottom;
+	width: calc(100% / 20);		
 }
 
 li{
+	display: inline-block;
+	text-align: center;
 	font-size: 14px;
-	line-height: 24px;
-	height: 24px;
+	background-color: #FACADA;
+	border: 2px solid white;
 }
 
 .connector{

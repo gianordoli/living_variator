@@ -62,9 +62,9 @@ app.main = (function(simulation) {
 
 
 		// SVG
-		var textLineHeight = 24;
-		var svgWidth = 200;
-		var svgHeight = inputs.length * textLineHeight;
+		var spacing = window.innerWidth/20;
+		var svgWidth = window.innerWidth;
+		var svgHeight = 200;
 		var svgCanvas = makeSVG('svg', {id: 's', width: svgWidth, height: svgHeight});
 
 		function makeSVG(tag, attrs) {
@@ -77,10 +77,10 @@ app.main = (function(simulation) {
 		function drawConnection(input, control){
 			var a = $(input).index();
 			var b = $(control).index();
-			var x1 = 5;
-			var x2 = svgWidth - 5;
-			var y1 = (a * textLineHeight) + textLineHeight/2;
-			var y2 = (b * textLineHeight) + textLineHeight/2;
+			var y1 = svgHeight - 5;
+			var y2 = 5;
+			var x1 = (a * spacing) + spacing/2;
+			var x2 = (b * spacing) + spacing/2;
 			var line = makeSVG('line', {
 				x1: x1, y1: y1, x2: x2, y2: y2,
 				input: $(input).attr('id'),
@@ -95,9 +95,10 @@ app.main = (function(simulation) {
 	        };
 		}
 
-		$('body').append(inputList);
-		body.appendChild(svgCanvas);
 		$('body').append(controlList);
+		body.appendChild(svgCanvas);
+		$('body').append(inputList);
+		
 	}
 
 
