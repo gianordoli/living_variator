@@ -47,14 +47,17 @@ app.main = (function(simulation) {
 		// CONTROLS
 		var controlList = $('<ul id="control-list"></ul>');		
 		for(var i = 0; i < controls.length; i++){
-			var listItem = $('<li id="'+controls[i]+'">'+controls[i]+'</li>').droppable({
+			var listItem = $('<li id="'+controls[i]+'" in-use="false">'+controls[i]+'</li>').droppable({
 		      drop: handleDropEvent
 		    });
 			$(controlList).append(listItem);
 		}
 
 		function handleDropEvent( event, ui ) {
-			drawConnection(ui.draggable, this);
+			if(this.getAttribute('in-use') === 'false'){
+				drawConnection(ui.draggable, this);
+				this.setAttribute('in-use', true);				
+			}
 		}
 
 
@@ -71,9 +74,9 @@ app.main = (function(simulation) {
             return el;
         }
 
-		function drawConnection(input, output){
+		function drawConnection(input, control){
 			var a = $(input).index();
-			var b = $(output).index();
+			var b = $(control).index();
 			var x1 = 5;
 			var x2 = svgWidth - 5;
 			var y1 = (a * textLineHeight) + textLineHeight/2;
@@ -81,12 +84,14 @@ app.main = (function(simulation) {
 			var line = makeSVG('line', {
 				x1: x1, y1: y1, x2: x2, y2: y2,
 				input: $(input).attr('id'),
-				output: $(output).attr('id')
+				control: $(control).attr('id')
 			});
 	        document.getElementById('s').appendChild(line);
+	        
+	        // Click on the line removes drawing
 	        line.onmousedown = function() {
-	            // console.log(this);
 	            this.parentNode.removeChild(this);
+	            $(control).attr('in-use', 'false');
 	        };
 		}
 
