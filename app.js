@@ -1,9 +1,8 @@
 //---------- BASIC SETUP ----------
 var express		= require('express'),
 	bodyParser	= require('body-parser'),
-	fs 			= require('fs'),
-	Canvas 		= require('canvas');
-
+	fs 			= require('fs');
+	//Canvas 		= require('canvas');
 
 var app = express();						// our Express app
 
@@ -70,81 +69,38 @@ io.on('connection', function(socket) {
     /*--------------------------------------------------------------*/
 });
 
-var Simulation = function(){
 
-	var obj = {};
+/*---------- SIMULATION  ----------*/
 
-	// CANVAS
-	var width	= 240,
-		height	= 120,
-		canvas 	= new Canvas(width, height),
-		ctx		= canvas.getContext('2d');
+var Simulation = require('./Simulation');
 
-	var posX, posY, speedX, speedY, radius;
+var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
+// simulation is now running using setInterval
 
-	setup();
-
-	function setup(){
-		// console.log('Called setup');
-		posX = 20;
-		posY = 0;
-		speedX = 2;
-		speedY = 2;
-		radius = 20;
-		setInterval(update, 1000/60);
-		update();
-	}
-
-	function update(){
-		// console.log('Called update');
-
-		posX += speedX;
-		posY += speedY;
-
-		if(posX < 0){
-			posX = 0;
-			speedX *= -1;
-		}else if(posX > width){
-			posX = width;
-			speedX *= -1;
-		}
-
-		if(posY < 0){
-			posY = 0;
-			speedY *= -1;
-		}else if(posY > height){
-			posY = height;
-			speedY *= -1;
-		}		
-
-		draw();
-	}	
-
-	function draw(){
-		// console.log('Called draw');
-		ctx.clearRect(0, 0, width, height);
-		ctx.fillStyle = '#09F';
-		ctx.fillRect(posX, posY, radius, radius);
-		io.sockets.emit('simulation', canvas.toDataURL());
+var emitCanvas = function(filename){
+	if (connectedUsers > 0){
+		//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()}); // send dataURL
+		//io.sockets.emit('simulation', { type: 'URL': buffer: filename }); // send filename of saved png
+		// simulation.canvas.toBuffer(function(err,buf){
+		// 	if (err) throw err;
+		//  	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')}); // send img buffer as base64
+		//  	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf}); // send raw img buffer (to encode base64 on client)
+		// });
+        io.sockets.emit('simulation', {
+            type: 'cellData',
+            buffer: simulation.cells, 
+            info: { width : simulation.width, height: simulation.height, fps: simulation.fps } 
+        });
 	}
 }
 
-var simulation = new Simulation();
+//setInterval(emitCanvas, 1000/20); // draw to client at specific fps
 
-
-
-
-// var out = fs.createWriteStream(__dirname + '/state.png')
-//   , stream = canvas.createPNGStream();
-
-// stream.on('data', function(chunk){
-//   out.write(chunk);
-//   console.log('yo!');
-// });
-
+simulation.onDraw = emitCanvas;
 
 
 /*---------------------------------*/
+
 
 
 /*---------- BASIC SETUP ----------*/
