@@ -3,14 +3,17 @@ ul{
 	display: inline-block;
 	vertical-align: top;
 	list-style-type: none;
+	padding-left: 0;
 }
 
 #input-list{
 	text-align: right;
+	padding: 4px;
 }
 
 #control-list{
 	text-align: left;
+	padding: 4px;
 }
 
 li{
@@ -24,4 +27,9 @@ li{
 	height: 40px;
 	border-radius: 25px;
 	background-color: rgb(255, 0, 0);
+}
+
+line{
+	stroke: rgb(255, 0, 0);
+	stroke-width: 2;
 }

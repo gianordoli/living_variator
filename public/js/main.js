@@ -26,17 +26,12 @@ app.main = (function(simulation) {
 
 	var drawUI = function(){
 		var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
-		var controls = [
-			{envVar: 'radius', inUse: false},
-			{envVar: 'acceleration', inUse: false},
-			{envVar: 'growthRate', inUse: false},
-			{envVar: 'age', inUse: false},
-			{envVar: 'deathWait', inUse: false}
-		];
+		var controls = ['radius', 'acceleration', 'growth-rate', 'age', 'death-wait'];
 
+		// INPUTS
 		var inputList = $('<ul id="input-list"></ul>');		
 		for(var i = 0; i < inputs.length; i++){
-			var listItem = $('<li>'+inputs[i]+'</li>').draggable({
+			var listItem = $('<li id="'+inputs[i]+'">'+inputs[i]+'</li>').draggable({
 				cursor: 'move',
 				containment: 'document',
 				helper: myHelper
@@ -49,23 +44,52 @@ app.main = (function(simulation) {
 		}
 
 
+		// CONTROLS
 		var controlList = $('<ul id="control-list"></ul>');		
 		for(var i = 0; i < controls.length; i++){
-			var listItem = $('<li>'+controls[i]['envVar']+'</li>').droppable({
+			var listItem = $('<li id="'+controls[i]+'">'+controls[i]+'</li>').droppable({
 		      drop: handleDropEvent
 		    });
 			$(controlList).append(listItem);
 		}
 
 		function handleDropEvent( event, ui ) {
-			var draggable = ui.draggable;
-			console.log($(draggable).html());
+			drawConnection(ui.draggable, this);
 		}
 
 
-		$('body').append(inputList)
-			.append(controlList)
-			;
+		// SVG
+		var textLineHeight = 24;
+		var svgCanvas = makeSVG('svg', {id: 's', width: 200, height: 500});
+
+		function makeSVG(tag, attrs) {
+            var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (var k in attrs)
+                el.setAttribute(k, attrs[k]);
+            return el;
+        }
+
+		function drawConnection(input, output){
+			var a = $(input).index();
+			var b = $(output).index();
+			var x1 = 0;
+			var x2 = 200;
+			var y1 = (a * textLineHeight) + textLineHeight;
+			var y2 = (b * textLineHeight) + textLineHeight;
+			var line = makeSVG('line', {
+				x1: x1, y1: y1, x2: x2, y2: y2,
+				input: $(input).attr('id'),
+				output: $(output).attr('id')
+			});
+	        document.getElementById('s').appendChild(line);
+	        line.onmousedown = function() {
+	            console.log(this);
+	        };
+		}
+
+		$('body').append(inputList);
+		body.appendChild(svgCanvas);
+		$('body').append(controlList);
 	}
 
 
