@@ -1,8 +1,10 @@
 //---------- BASIC SETUP ----------
 var express		= require('express'),
 	bodyParser	= require('body-parser'),
-	fs 			= require('fs');
-	Canvas 		= require('canvas');
+	fs 			= require('fs'),
+    jsonfile    = require('jsonfile'),
+	Canvas 		= require('canvas')
+    ;
 
 var app = express();						// our Express app
 
@@ -72,12 +74,36 @@ io.on('connection', function(socket) {
         });
     });
 
+    // Receives connection (input to control) update from client
     socket.on('update-connections', function(data){
         connections = data;
         console.log(connections);
     });
     /*--------------------------------------------------------------*/
 });
+
+/*---------- DATA INPUT  ----------*/
+var file = 'dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json';
+var data = jsonfile.readFileSync(file);
+// Let's simulate a data update
+// setInterval(dataUpdate, 1000);
+var currData = [];
+var n = 0;
+function dataUpdate(){
+    var column = inputs[0];
+    // console.log(data[n]);
+    var newObj = {};
+    // Let's constrain our inputs to the 'A' columns
+    for(var prop in data[n]){
+        if(inputs.indexOf(prop) > -1){
+            newObj[prop] = data[n][prop];
+        }
+    }
+    newObj['Date Time'] = data[n]['Date Time'];
+    // console.log(newObj);
+    io.sockets.emit('data-update', newObj);
+    n++;
+}
 
 /*---------- DATA CONNECTION  ----------*/
 var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];

@@ -22,7 +22,7 @@ ul{
 	width: calc(100% / 20);		
 }
 
-li{
+li, .connector{
 	display: inline-block;
 	text-align: center;
 	font-size: 14px;
@@ -30,13 +30,13 @@ li{
 	border: 2px solid white;
 }
 
-.connector{
+/*.connector{
 	display: block;
 	width: 20px;
 	height: 20px;
 	border-radius: 25px;
 	background-color: rgb(255, 0, 0);
-}
+}*/
 
 line{
 	stroke: rgb(255, 0, 0);

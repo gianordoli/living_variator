@@ -12,16 +12,12 @@ app.main = (function(simulation) {
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
 
-	var loadData = function(){
-		console.log('Called loadData');
-		$.getJSON('dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json', function(json){
-			console.log('Data received.');
-			// console.log(json);
-			for(var i = 0; i < json.length; i++){
-				json[i]['Date Time'] = new Date(json[i]['Date Time']);				
-			}
-			// console.log(json);
-		});
+	var appendData = function(data){
+		console.log('Called appendData');
+		console.log(data);
+		for(var prop in data){
+
+		}
 	}
 
 	var drawUI = function(inputs, controls, connections){
@@ -33,16 +29,19 @@ app.main = (function(simulation) {
 		// INPUTS
 		var inputList = $('<ul id="input-list"></ul>');		
 		for(var i = 0; i < inputs.length; i++){
-			var listItem = $('<li id="'+inputs[i]+'">'+inputs[i]+'</li>').draggable({
+			var listItem = $('<li></li>');
+			var header = $('<p id="'+inputs[i]+'">'+inputs[i]+'</p>').draggable({
 				cursor: 'move',
 				containment: 'document',
 				helper: myHelper
-			});
+			})
+			.appendTo(listItem);
+
 			$(inputList).append(listItem);
 		}
 
-		function myHelper(event) {
-		  return '<div class="connector"></div>';
+		function myHelper(event, ui) {
+			return '<div class="connector">'+$(event.target).attr('id')+'</div>';
 		}
 
 
@@ -56,6 +55,7 @@ app.main = (function(simulation) {
 		}
 
 		function handleDropEvent( event, ui ) {
+			console.log('Called handleDropEvent');
 			if(this.getAttribute('in-use') === 'false'){
 				drawConnection(ui.draggable, this);
 				this.setAttribute('in-use', true);				
@@ -78,8 +78,8 @@ app.main = (function(simulation) {
         }
 
 		function drawConnection(input, control){
-			console.log(input);
-			var a = $(input).index();
+			var a = $(input).parent().index();
+			console.log(a);
 			var b = $(control).index();
 			var y1 = svgHeight - 5;
 			var y2 = 5;
@@ -141,6 +141,10 @@ app.main = (function(simulation) {
 			console.log(data.msg);
 		});
 
+		socket.on('data-update', function(data){
+			appendData(data);
+		});	
+
 		socket.on('draw-connections', function(data){
 			console.log(data);
 			drawUI(data.inputs, data.controls, data.connections);
@@ -180,7 +184,6 @@ app.main = (function(simulation) {
 	var init = function(){
 		console.log('Initializing app.');
 		socketSetup();
-		loadData();
 	};
 
 	return {
