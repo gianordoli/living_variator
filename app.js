@@ -72,8 +72,9 @@ io.on('connection', function(socket) {
         });
     });
 
-    socket.on('connections-update', function(data){
-        console.log(data);
+    socket.on('update-connections', function(data){
+        connections = data;
+        console.log(connections);
     });
     /*--------------------------------------------------------------*/
 });

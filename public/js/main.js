@@ -49,7 +49,7 @@ app.main = (function(simulation) {
 		// CONTROLS
 		var controlList = $('<ul id="control-list"></ul>');		
 		for(var i = 0; i < controls.length; i++){
-			var listItem = $('<li id="'+controls[i]+'" in-use="false">'+controls[i]+'</li>').droppable({
+			var listItem = $('<li id="'+controls[i]+'" in-use="true">'+controls[i]+'</li>').droppable({
 		      drop: handleDropEvent
 		    });
 			$(controlList).append(listItem);
@@ -92,9 +92,10 @@ app.main = (function(simulation) {
 			});
 	        document.getElementById('s').appendChild(line);
 	        
-	        // Click on the line removes drawing
 	        line.onmousedown = function() {
+	        	// Click on the line removes drawing...
 	            this.parentNode.removeChild(this);
+	            // ...and set <control in-use> to false
 	            $(control).attr('in-use', 'false');
 	        };
 		}
