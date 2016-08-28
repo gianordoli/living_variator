@@ -2,7 +2,7 @@
 var express		= require('express'),
 	bodyParser	= require('body-parser'),
 	fs 			= require('fs');
-	//Canvas 		= require('canvas');
+	Canvas 		= require('canvas');
 
 var app = express();						// our Express app
 
@@ -74,9 +74,6 @@ io.on('connection', function(socket) {
 
 var Simulation = require('./Simulation');
 
-var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
-// simulation is now running using setInterval
-
 var emitCanvas = function(filename){
 	if (connectedUsers > 0){
 		//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()}); // send dataURL
@@ -94,10 +91,10 @@ var emitCanvas = function(filename){
 	}
 }
 
+// UNCOMMENT LATER!!!
+// var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
 //setInterval(emitCanvas, 1000/20); // draw to client at specific fps
-
-simulation.onDraw = emitCanvas;
-
+// simulation.onDraw = emitCanvas;
 
 /*---------------------------------*/
 

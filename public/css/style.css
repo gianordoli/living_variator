@@ -1,1 +1,36 @@
 /* your style begins here */
+ul{
+	display: inline-block;
+	vertical-align: top;
+	list-style-type: none;
+	padding: 0 5px;
+	margin: 0;
+}
+
+#input-list{
+	text-align: right;
+}
+
+#control-list{
+	text-align: left;
+}
+
+li{
+	font-size: 14px;
+	line-height: 24px;
+	height: 24px;
+}
+
+.connector{
+	display: block;
+	width: 20px;
+	height: 20px;
+	border-radius: 25px;
+	background-color: rgb(255, 0, 0);
+}
+
+line{
+	stroke: rgb(255, 0, 0);
+	stroke-width: 5;
+	cursor: pointer;
+}

@@ -2,7 +2,7 @@
 
 var app = app || {};
 
-app.main = (function() {
+app.main = (function(simulation) {
 	console.log('Your code starts here!');
 
 	var socket;
@@ -11,48 +11,95 @@ app.main = (function() {
 	//body.appendChild(img);	
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
-	ctx.fillStyle = "black";
-	ctx.fillRect(0,0,canvas.width,canvas.height);
 
-	var drawCellData = function(cells, info){
+	var loadData = function(){
+		console.log('Called loadData');
+		$.getJSON('dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json', function(json){
+			console.log('Data received.');
+			console.log(json);
+			for(var i = 0; i < json.length; i++){
+				json[i]['Date Time'] = new Date(json[i]['Date Time']);				
+			}
+			console.log(json);
+		});
+	}
 
-		// bg
-		ctx.globalCompositeOperation = "source-over"
+	var drawUI = function(){
+		var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
+		var controls = ['radius', 'acceleration', 'growth-rate', 'age', 'death-wait'];
 
-		ctx.fillStyle = "rgba(0,0,0,0.2)";
-		ctx.fillRect(0,0,canvas.width,canvas.height);
-
-		ctx.globalCompositeOperation = "lighten";
-
-		// draw cells
-		for (var i=0; i<cells.length; i++){
-
-			var c = cells[i];
-
-			// draw neighborhood radius
-			ctx.beginPath();
-			var nColor = 'hsla('+c.nColor.h+','+c.nColor.s+'%,'+c.nColor.l+'%,0.1)';
-			ctx.fillStyle = nColor;
-			ctx.arc( c.x,c.y, c.neighborhoodRadius,0,Math.PI*2 );
-			ctx.fill();
-
-			// draw cell radius
-			ctx.beginPath();
-			var color = 'hsla('+c.color.h+','+c.color.s+'%,'+c.color.l+'%,'+c.color.a+')';
-			ctx.fillStyle = color;
-			ctx.arc( c.x,c.y,c.radius,0,Math.PI*2 );
-			ctx.fill();
-
+		// INPUTS
+		var inputList = $('<ul id="input-list"></ul>');		
+		for(var i = 0; i < inputs.length; i++){
+			var listItem = $('<li id="'+inputs[i]+'">'+inputs[i]+'</li>').draggable({
+				cursor: 'move',
+				containment: 'document',
+				helper: myHelper
+			});
+			$(inputList).append(listItem);
 		}
 
-		ctx.globalCompositeOperation = "source-over";
+		function myHelper(event) {
+		  return '<div class="connector"></div>';
+		}
 
-		// fps draw
-		ctx.fillStyle = "rgba(0,0,0,0.6)";
-		ctx.fillRect(0,0,60,20);
-		ctx.fillStyle = "#fff";
-		ctx.fillText("fps: " + info.fps.toFixed(2), 5,15);
+
+		// CONTROLS
+		var controlList = $('<ul id="control-list"></ul>');		
+		for(var i = 0; i < controls.length; i++){
+			var listItem = $('<li id="'+controls[i]+'" in-use="false">'+controls[i]+'</li>').droppable({
+		      drop: handleDropEvent
+		    });
+			$(controlList).append(listItem);
+		}
+
+		function handleDropEvent( event, ui ) {
+			if(this.getAttribute('in-use') === 'false'){
+				drawConnection(ui.draggable, this);
+				this.setAttribute('in-use', true);				
+			}
+		}
+
+
+		// SVG
+		var textLineHeight = 24;
+		var svgWidth = 200;
+		var svgHeight = inputs.length * textLineHeight;
+		var svgCanvas = makeSVG('svg', {id: 's', width: svgWidth, height: svgHeight});
+
+		function makeSVG(tag, attrs) {
+            var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+            for (var k in attrs)
+                el.setAttribute(k, attrs[k]);
+            return el;
+        }
+
+		function drawConnection(input, control){
+			var a = $(input).index();
+			var b = $(control).index();
+			var x1 = 5;
+			var x2 = svgWidth - 5;
+			var y1 = (a * textLineHeight) + textLineHeight/2;
+			var y2 = (b * textLineHeight) + textLineHeight/2;
+			var line = makeSVG('line', {
+				x1: x1, y1: y1, x2: x2, y2: y2,
+				input: $(input).attr('id'),
+				control: $(control).attr('id')
+			});
+	        document.getElementById('s').appendChild(line);
+	        
+	        // Click on the line removes drawing
+	        line.onmousedown = function() {
+	            this.parentNode.removeChild(this);
+	            $(control).attr('in-use', 'false');
+	        };
+		}
+
+		$('body').append(inputList);
+		body.appendChild(svgCanvas);
+		$('body').append(controlList);
 	}
+
 
 	// Initializing socket and adding listener functions
 	var socketSetup = function(){
@@ -89,7 +136,7 @@ app.main = (function() {
 			}
 			else if (data.type == 'cellData'){ // raw cell data for client-canvas drawing
 				console.log(data);
-				drawCellData(data.buffer,data.info);
+				simulation.drawCellData(data.buffer, data.info, ctx);
 			}
 
 		});
@@ -98,14 +145,15 @@ app.main = (function() {
 
 	var init = function(){
 		console.log('Initializing app.');
-
-		socketSetup();	// Sending attachEvents as a callback	
+		socketSetup();
+		loadData();
+		drawUI();
 	};
 
 	return {
 		init: init
 	};
 
-})();
+})(simulation);
 
 window.addEventListener('DOMContentLoaded', app.main.init);
