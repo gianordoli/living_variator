@@ -122,7 +122,7 @@ var connections = [
 
 /*---------- SIMULATION  ----------*/
 
-var Simulation = require('./Simulation');
+var Simulation = require('./simulation');
 
 var emitCanvas = function(filename){
 	if (connectedUsers > 0){

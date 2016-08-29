@@ -3,7 +3,7 @@
 // Simulation class
 // ----------------
 
-var Cell = require('./Cell'); // cell class
+var Cell = require('./cell'); // cell class
 // var Canvas = require('canvas');
 
 
