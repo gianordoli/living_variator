@@ -3,7 +3,7 @@ var express		= require('express'),
 	bodyParser	= require('body-parser'),
 	fs 			= require('fs'),
     jsonfile    = require('jsonfile'),
-	Canvas 		= require('canvas')
+	// Canvas 		= require('canvas')
     ;
 
 var app = express();						// our Express app
