@@ -32,49 +32,93 @@ app.main = (function(simulation) {
 		console.log(controls);
 		console.log(connections);
 
-		// INPUTS
-		var inputList = $('<ul id="input-list"></ul>');		
-		for(var i = 0; i < inputs.length; i++){
-			var listItem = $('<li class="data-connection"></li>');
-			var header = $('<p id="'+inputs[i]+'">'+inputs[i]+'</p>').draggable({
-				cursor: 'move',
-				containment: 'document',
-				helper: myHelper
-			})
-			.appendTo(listItem);
-			$(listItem).append('<ul class="data-log"></ul>');
+		var spacing, svgWidth, svgHeight;
 
-			$(inputList).append(listItem);
+		if(document.getElementById('input-list') === null){
+			setup();
+		
+		}else{
+			update();
 		}
 
-		function myHelper(event) {
-			return '<div class="connector">'+$(event.target).attr('id')+'</div>';
-		}
+		function setup(){
+			console.log('Creating UI');
 
+			// INPUTS
+			var inputList = $('<ul id="input-list"></ul>');		
+			for(var i = 0; i < inputs.length; i++){
+				var listItem = $('<li class="data-connection"></li>');
+				var header = $('<p id="'+inputs[i]+'">'+inputs[i]+'</p>').draggable({
+					cursor: 'move',
+					containment: 'document',
+					helper: myHelper
+				})
+				.appendTo(listItem);
+				$(listItem).append('<ul class="data-log"></ul>');
 
-		// CONTROLS
-		var controlList = $('<ul id="control-list"></ul>');		
-		for(var i = 0; i < controls.length; i++){
-			var listItem = $('<li id="'+controls[i]+'" in-use="true" class="data-connection">'+controls[i]+'</li>').droppable({
-		      drop: handleDropEvent
-		    });
-			$(controlList).append(listItem);
-		}
-
-		function handleDropEvent( event, ui ) {
-			console.log('Called handleDropEvent');
-			if(this.getAttribute('in-use') === 'false'){
-				drawConnection(ui.draggable, this);
-				this.setAttribute('in-use', true);				
+				$(inputList).append(listItem);
 			}
+
+			function myHelper(event) {
+				return '<div class="connector">'+$(event.target).attr('id')+'</div>';
+			}
+
+
+			// CONTROLS
+			var controlList = $('<ul id="control-list"></ul>');		
+			for(var i = 0; i < controls.length; i++){
+				var listItem = $('<li id="'+controls[i]+'" in-use="true" class="data-connection">'+controls[i]+'</li>').droppable({
+			      drop: handleDropEvent
+			    });
+				$(controlList).append(listItem);
+			}
+
+			function handleDropEvent( event, ui ) {
+				console.log('Called handleDropEvent');
+				if(this.getAttribute('in-use') === 'false'){
+					drawConnection(ui.draggable, this);
+					this.setAttribute('in-use', true);				
+				}
+			}
+
+
+			// SVG
+			spacing = window.innerWidth/20;
+			svgWidth = window.innerWidth;
+			svgHeight = 200;
+			var svgCanvas = makeSVG('svg', {id: 's', width: svgWidth, height: svgHeight});
+
+			// When updating, loop through all lines and get a list of input -> control
+			var btUpdate = $('<button>Update</button>')
+				.off('click').on('click', function(){
+					var updatedConnections = [];				
+					var lines = document.getElementsByTagName('line');
+					for(var i = 0; i < lines.length; i++){
+						updatedConnections.push({
+							input: lines[i].getAttribute('input'),
+							control: lines[i].getAttribute('control') 
+						});
+					}
+					console.log(updatedConnections);
+					socket.emit('update-connections', updatedConnections);
+				});
+
+			$('body').append(btUpdate);	
+			$('body').append(controlList);
+			body.appendChild(svgCanvas);
+			$('body').append(inputList);
+
+			update();
 		}
 
-
-		// SVG
-		var spacing = window.innerWidth/20;
-		var svgWidth = window.innerWidth;
-		var svgHeight = 200;
-		var svgCanvas = makeSVG('svg', {id: 's', width: svgWidth, height: svgHeight});
+		function update(){
+	        // Drawing connections read from server	
+	        for(var i = 0; i < connections.length; i++){
+	        	var input = document.getElementById(connections[i]['input']);
+	        	var control = document.getElementById(connections[i]['control']);
+	        	drawConnection(input, control);
+	        }
+		}
 
 		// You can't use JQuery to append SVG elements, so...
 		function makeSVG(tag, attrs) {
@@ -82,7 +126,7 @@ app.main = (function(simulation) {
             for (var k in attrs)
                 el.setAttribute(k, attrs[k]);
             return el;
-        }
+        }		
 
 		function drawConnection(input, control){
 			var a = $(input).parent().index();
@@ -105,35 +149,7 @@ app.main = (function(simulation) {
 	            // ...and set <control in-use> to false
 	            $(control).attr('in-use', 'false');
 	        };
-		}
-
-		// When updating, loop through all lines and get a list of input -> control
-		var btUpdate = $('<button>Update</button>')
-			.off('click').on('click', function(){
-				var updatedConnections = [];				
-				var lines = document.getElementsByTagName('line');
-				for(var i = 0; i < lines.length; i++){
-					updatedConnections.push({
-						input: lines[i].getAttribute('input'),
-						control: lines[i].getAttribute('control') 
-					});
-				}
-				console.log(updatedConnections);
-				socket.emit('update-connections', updatedConnections);
-			});
-
-		$('body').append(btUpdate);	
-		$('body').append(controlList);
-		body.appendChild(svgCanvas);
-		$('body').append(inputList);
-
-
-        // Drawing connections read from server	
-        for(var i = 0; i < connections.length; i++){
-        	var input = document.getElementById(connections[i]['input']);
-        	var control = document.getElementById(connections[i]['control']);
-        	drawConnection(input, control);
-        }
+		}		
 	}
 
 
