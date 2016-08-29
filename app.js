@@ -1,8 +1,8 @@
 //---------- BASIC SETUP ----------
-var express		= require('express'),
-	bodyParser	= require('body-parser'),
-	fs 			= require('fs'),
-    jsonfile    = require('jsonfile'),
+var    express		= require('express')
+	,  bodyParser	= require('body-parser')
+	,  fs 			= require('fs')
+    ,  jsonfile     = require('jsonfile')
 	// Canvas 		= require('canvas')
     ;
 
@@ -142,9 +142,9 @@ var emitCanvas = function(filename){
 }
 
 // UNCOMMENT LATER!!!
-// var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
+var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
 //setInterval(emitCanvas, 1000/20); // draw to client at specific fps
-// simulation.onDraw = emitCanvas;
+simulation.onDraw = emitCanvas;
 
 /*---------------------------------*/
 

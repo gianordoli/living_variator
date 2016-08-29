@@ -4,7 +4,7 @@
 // ----------------
 
 var Cell = require('./Cell'); // cell class
-var Canvas = require('canvas');
+// var Canvas = require('canvas');
 
 
 function Simulation (width,height,numCells,framerate, drawOnServer){ // constructor / setup
@@ -18,8 +18,8 @@ function Simulation (width,height,numCells,framerate, drawOnServer){ // construc
 	self.drawOnServer = drawOnServer || false;
 	self.width	= width || 500;
 	self.height	= height || 500;
-	self.canvas = new Canvas(self.width, self.height);
-	self.ctx	= self.canvas.getContext('2d');
+	// self.canvas = new Canvas(self.width, self.height);
+	// self.ctx	= self.canvas.getContext('2d');
 
 	// fps
 	self.targetFps = framerate || 30;
