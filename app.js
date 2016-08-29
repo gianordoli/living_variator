@@ -86,7 +86,7 @@ io.on('connection', function(socket) {
 var file = 'dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json';
 var data = jsonfile.readFileSync(file);
 // Let's simulate a data update
-// setInterval(dataUpdate, 1000);
+setInterval(dataUpdate, 5000);
 var currData = [];
 var n = 0;
 function dataUpdate(){
@@ -102,20 +102,22 @@ function dataUpdate(){
     newObj['Date Time'] = data[n]['Date Time'];
     // console.log(newObj);
     io.sockets.emit('data-update', newObj);
-    n++;
+    if(n < data.length - 1){
+        n++;
+    }
 }
 
 /*---------- DATA CONNECTION  ----------*/
 var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
 var controls = ['radius', 'acceleration', 'growth-rate', 'age', 'death-wait'];
 // Assigning random connections to start
-var connections = [];
-for(var i = 0; i < controls.length; i++){
-    connections.push({
-        input: inputs[i],
-        control: controls[i]
-    });
-}
+var connections = [
+    { input: inputs[2], control: controls[0] },
+    { input: inputs[5], control: controls[1] },
+    { input: inputs[1], control: controls[2] },
+    { input: inputs[13], control: controls[3] },
+    { input: inputs[10], control: controls[4] }
+    ];
 
 
 /*---------- SIMULATION  ----------*/

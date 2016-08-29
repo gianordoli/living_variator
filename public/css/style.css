@@ -12,17 +12,10 @@ ul{
 	margin: 0;
 }
 
-#input-list li{
-	vertical-align: top;
+#input-list li.data-connection,
+#control-list li.data-connection,
+.connector{
 	width: calc(100% / 20);		
-}
-
-#control-list li{
-	vertical-align: bottom;
-	width: calc(100% / 20);		
-}
-
-li, .connector{
 	display: inline-block;
 	text-align: center;
 	font-size: 14px;
@@ -30,6 +23,21 @@ li, .connector{
 	border: 2px solid white;
 }
 
+#input-list li{
+	vertical-align: top;
+}
+
+#control-list li{
+	vertical-align: bottom;
+}
+
+.data-log{
+	background-color: white;
+}
+
+.data-log li{
+	display: list-item;
+}
 /*.connector{
 	display: block;
 	width: 20px;

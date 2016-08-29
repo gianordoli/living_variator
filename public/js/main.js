@@ -13,10 +13,16 @@ app.main = (function(simulation) {
 	var ctx = canvas.getContext('2d');
 
 	var appendData = function(data){
-		console.log('Called appendData');
-		console.log(data);
+		// console.log('Called appendData');
+		// console.log(data);
 		for(var prop in data){
-
+			if(prop !== 'Date Time'){
+				var parent = document.getElementById(prop).parentNode;
+				var dataLog = parent.getElementsByClassName('data-log')[0];
+				var newData = document.createElement('li');
+				newData.innerHTML = data[prop].toFixed(2);
+				dataLog.appendChild(newData)
+			}
 		}
 	}
 
@@ -29,18 +35,19 @@ app.main = (function(simulation) {
 		// INPUTS
 		var inputList = $('<ul id="input-list"></ul>');		
 		for(var i = 0; i < inputs.length; i++){
-			var listItem = $('<li></li>');
+			var listItem = $('<li class="data-connection"></li>');
 			var header = $('<p id="'+inputs[i]+'">'+inputs[i]+'</p>').draggable({
 				cursor: 'move',
 				containment: 'document',
 				helper: myHelper
 			})
 			.appendTo(listItem);
+			$(listItem).append('<ul class="data-log"></ul>');
 
 			$(inputList).append(listItem);
 		}
 
-		function myHelper(event, ui) {
+		function myHelper(event) {
 			return '<div class="connector">'+$(event.target).attr('id')+'</div>';
 		}
 
@@ -48,7 +55,7 @@ app.main = (function(simulation) {
 		// CONTROLS
 		var controlList = $('<ul id="control-list"></ul>');		
 		for(var i = 0; i < controls.length; i++){
-			var listItem = $('<li id="'+controls[i]+'" in-use="true">'+controls[i]+'</li>').droppable({
+			var listItem = $('<li id="'+controls[i]+'" in-use="true" class="data-connection">'+controls[i]+'</li>').droppable({
 		      drop: handleDropEvent
 		    });
 			$(controlList).append(listItem);
@@ -115,10 +122,10 @@ app.main = (function(simulation) {
 				socket.emit('update-connections', updatedConnections);
 			});
 
+		$('body').append(btUpdate);	
 		$('body').append(controlList);
 		body.appendChild(svgCanvas);
 		$('body').append(inputList);
-		$('body').append(btUpdate);	
 
 
         // Drawing connections read from server	
