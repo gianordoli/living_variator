@@ -8,6 +8,7 @@
 body{
 	font-size: 14px;
 	line-height: 16px;
+	padding: 10px;
 }
 
 h1, h2, h3, h4, h5, h6, p, select{
@@ -28,7 +29,7 @@ button{
 	display: inline-block;
 	border: 1px solid black;
 	padding: 10px;
-	margin-right: 10px;
+	margin: 10px 10px 0 0;
 	text-align: left;
 }
 

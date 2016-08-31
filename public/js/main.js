@@ -14,7 +14,7 @@ app.main = (function(simulation) {
 
 	function appendData(data){
 		console.log('Called appendData');
-		// console.log(data);
+		console.log(data);
 		for(var prop in data){
 			if(prop !== 'Date Time'){
 				var dropdown = $('option[value="'+prop+'"][selected="selected"]');
@@ -39,7 +39,7 @@ app.main = (function(simulation) {
 		console.log(controls);
 		console.log(connections);
 
-		if(document.getElementById('input-list') === null){
+		if($('#ui').length === 0){
 			setup();
 		
 		}else{
@@ -92,6 +92,9 @@ app.main = (function(simulation) {
 				.append('<button id="bt-update">Update</button>')
 				.off('click')
 				.on('click', function(){
+
+					$('.data-control, .data-input').empty();
+
 					var updatedConnections = [];
 					var selects = $('select');
 					for(var i = 0; i < selects.length; i++){
@@ -101,7 +104,7 @@ app.main = (function(simulation) {
 						});						
 					}
 					console.log(updatedConnections);
-					// socket.emit('update-connections', updatedConnections);
+					socket.emit('update-connections', updatedConnections);
 				})
 				.appendTo('body')
 				;				

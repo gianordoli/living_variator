@@ -105,6 +105,8 @@ function dataUpdate(){
     io.sockets.emit('data-update', newObj);
     if(n < data.length - 1){
         n++;
+    }else{
+        n = 0;
     }
 }
 
