@@ -92,7 +92,14 @@ app.main = (function(simulation) {
 				.append('<button id="bt-update">Update</button>')
 				.off('click')
 				.on('click', function(){
+					var updatedConnections = [];
+					var selects = $('select');
+					for(var i = 0; i < selects.length; i++){
+						console.log($(selects[i]).val());	
+					}
 					
+					// console.log(updatedConnections);
+					// socket.emit('update-connections', updatedConnections);
 				})
 				.appendTo('body')
 				;				
