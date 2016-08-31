@@ -86,7 +86,8 @@ io.on('connection', function(socket) {
 var file = 'dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json';
 var data = jsonfile.readFileSync(file);
 // Let's simulate a data update
-setInterval(dataUpdate, 5000);
+setInterval(dataUpdate, 1000);
+
 var currData = [];
 var n = 0;
 function dataUpdate(){
@@ -142,13 +143,11 @@ var emitCanvas = function(filename){
 }
 
 // UNCOMMENT LATER!!!
-var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
+// var simulation = new Simulation(1280,720,300,30,false); // width, height, fps, drawOnServer?
 //setInterval(emitCanvas, 1000/20); // draw to client at specific fps
-simulation.onDraw = emitCanvas;
+// simulation.onDraw = emitCanvas;
 
 /*---------------------------------*/
-
-
 
 /*---------- BASIC SETUP ----------*/
 var PORT = process.env.PORT || 4000;
