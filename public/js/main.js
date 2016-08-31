@@ -95,10 +95,12 @@ app.main = (function(simulation) {
 					var updatedConnections = [];
 					var selects = $('select');
 					for(var i = 0; i < selects.length; i++){
-						console.log($(selects[i]).val());	
+						updatedConnections.push({
+							input: $(selects[i]).val(),
+							control: $(selects[i]).attr('id') 
+						});						
 					}
-					
-					// console.log(updatedConnections);
+					console.log(updatedConnections);
 					// socket.emit('update-connections', updatedConnections);
 				})
 				.appendTo('body')
