@@ -12,28 +12,28 @@ app.main = (function(simulation) {
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
 
-	var appendData = function(data){
+	function appendData(data){
 		console.log('Called appendData');
 		// console.log(data);
 		for(var prop in data){
 			if(prop !== 'Date Time'){
-				var dropdown = $("option[value='"+prop+"'").attr('selected', true);
-				var parent = $(dropdown).parent();
-				var dataLog = $(parent).find('.data-input');
-				console.log(dropdown);
-				$(dataLog)
-					.append('<li>'+data[prop].toFixed(2)+'</li>')
-					;
-				// var parent = document.getElementById(prop).parentNode;
-				// var dataLog = parent.getElementsByClassName('data-input')[0];
-				// var newData = document.createElement('li');
-				// newData.innerHTML = data[prop].toFixed(2);
-				// dataLog.appendChild(newData)
+				var dropdown = $('option[value="'+prop+'"][selected="selected"]');
+
+				if(dropdown.length > 0){
+					// console.log(dropdown);
+					$(dropdown)
+						.parent()
+						.parent()
+						.find('.data-input')
+						.prepend('<li>'+data[prop].toFixed(2)+'</li>')
+						;
+					// console.log(dataLog);
+				}
 			}
 		}
-	}
+	};
 
-	var drawUI = function(inputs, controls, connections){
+	function drawUI(inputs, controls, connections){
 		console.log('Called drawUI');
 		console.log(inputs);
 		console.log(controls);
@@ -89,7 +89,11 @@ app.main = (function(simulation) {
 			}
 
 			$(ui)
-				.append('<button id="bt-update">update</button>')
+				.append('<button id="bt-update">Update</button>')
+				.off('click')
+				.on('click', function(){
+					
+				})
 				.appendTo('body')
 				;				
 
@@ -97,16 +101,32 @@ app.main = (function(simulation) {
 		}
 
 		function update(){
-	        // Drawing connections read from server	
+	        // Updating dropdowns based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
-	        	$('#'+connections[i]['control']).val(connections[i]['input']);
+	        	var dropdown = $('#'+connections[i]['control'])
+	        		.change(function(){
+	        			handleChange(this);
+	        		})
+	        		;
+	        	$(dropdown).val(connections[i]['input']);
+	        	handleChange(dropdown);
+	        }
+	        function handleChange(obj){
+    			var options = $(obj).find('option');
+    			for(var i = 0; i < options.length; i++){
+    				if($(options[i]).val() == $(obj).val()){
+						$(options[i]).attr('selected', true);
+    				}else{
+						$(options[i]).removeAttr('selected');
+    				}
+    			}
 	        }
 		}
 	}
 
 
 	// Initializing socket and adding listener functions
-	var socketSetup = function(){
+	function socketSetup(){
 		
 		// Connect
 	    socket = io.connect();
@@ -154,7 +174,7 @@ app.main = (function(simulation) {
 
 		});
 
-	};
+	}
 
 	var init = function(){
 		console.log('Initializing app.');

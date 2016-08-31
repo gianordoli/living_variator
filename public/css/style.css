@@ -45,14 +45,14 @@ button{
 	overflow: scroll;
 }
 
-/*ul{
-	display: block;
+ul{
+	/*display: block;*/
 	list-style-type: none;
 	padding: 0 5px;
 	margin: 0;
 }
 
-#input-list li.data-connection,
+/*#input-list li.data-connection,
 #control-list li.data-connection,
 .connector{
 	width: calc(100% / 20);		
@@ -90,4 +90,4 @@ line{
 	stroke: rgb(255, 0, 0);
 	stroke-width: 5;
 	cursor: pointer;
-}*/
+}
