@@ -13,15 +13,22 @@ app.main = (function(simulation) {
 	var ctx = canvas.getContext('2d');
 
 	var appendData = function(data){
-		// console.log('Called appendData');
+		console.log('Called appendData');
 		// console.log(data);
 		for(var prop in data){
 			if(prop !== 'Date Time'){
-				var parent = document.getElementById(prop).parentNode;
-				var dataLog = parent.getElementsByClassName('data-log')[0];
-				var newData = document.createElement('li');
-				newData.innerHTML = data[prop].toFixed(2);
-				dataLog.appendChild(newData)
+				var dropdown = $("option[value='"+prop+"'").attr('selected', true);
+				var parent = $(dropdown).parent();
+				var dataLog = $(parent).find('.data-input');
+				console.log(dropdown);
+				$(dataLog)
+					.append('<li>'+data[prop].toFixed(2)+'</li>')
+					;
+				// var parent = document.getElementById(prop).parentNode;
+				// var dataLog = parent.getElementsByClassName('data-input')[0];
+				// var newData = document.createElement('li');
+				// newData.innerHTML = data[prop].toFixed(2);
+				// dataLog.appendChild(newData)
 			}
 		}
 	}
@@ -40,7 +47,10 @@ app.main = (function(simulation) {
 		}
 
 		function setup(){
+
 			console.log('Creating UI');
+
+			var ui = $('<div id="ui"></div>');			
 
 			for(var i = 0; i < controls.length; i++){
 
@@ -49,7 +59,7 @@ app.main = (function(simulation) {
 				// input
 				var divInput = $('<div class="input"></div>');
 
-				var dropdown = $('<select></select>');
+				var dropdown = $('<select id="'+controls[i]+'"></select>');
 				for(var j = 0; j < inputs.length; j++){
 					$(dropdown)
 						.append('<option value="'+inputs[j]+'">'+inputs[j]+'</option>')
@@ -58,7 +68,7 @@ app.main = (function(simulation) {
 				$(divInput)
 					.append('<h6>INPUT</h6>')
 					.append(dropdown)
-					.append('<div class="data"></div>')
+					.append('<ul class="data-input"></ul>')
 					;
 
 				// control
@@ -67,84 +77,31 @@ app.main = (function(simulation) {
 				$(divControl)
 					.append('<h6>CONTROL</h6>')
 					.append('<p>'+controls[i]+'</p>')
-					.append('<div class="data"></div>')
+					.append('<ul class="data-control"></ul>')
 					;
 					
 
 				$(controlParent)
 					.append(divInput)
 					.append(divControl)
-					.appendTo('body')
+					.appendTo(ui)
 					;
-
-				// $(body).append(controlParent);
 			}
-			// for(var i = 0; i < inputs.length; i++){
-			// 	var listItem = $('<li class="data-connection"></li>');
-			// 	var header = $('<p id="'+inputs[i]+'">'+inputs[i]+'</p>').draggable({
-			// 		cursor: 'move',
-			// 		containment: 'document',
-			// 		helper: myHelper
-			// 	})
-			// 	.appendTo(listItem);
-			// 	$(listItem).append('<ul class="data-log"></ul>');
 
-			// 	$(inputList).append(listItem);
-			// }
+			$(ui)
+				.append('<button id="bt-update">update</button>')
+				.appendTo('body')
+				;				
 
-			// var inputList = $('<ul id="input-list"></ul>');		
-			// for(var i = 0; i < inputs.length; i++){
-			// 	var listItem = $('<li class="data-connection"></li>');
-			// 	var header = $('<p id="'+inputs[i]+'">'+inputs[i]+'</p>').draggable({
-			// 		cursor: 'move',
-			// 		containment: 'document',
-			// 		helper: myHelper
-			// 	})
-			// 	.appendTo(listItem);
-			// 	$(listItem).append('<ul class="data-log"></ul>');
-
-			// 	$(inputList).append(listItem);
-			// }
-
-
-			// // CONTROLS
-			// var controlList = $('<ul id="control-list"></ul>');		
-			// for(var i = 0; i < controls.length; i++){
-			// 	var listItem = $('<li id="'+controls[i]+'" in-use="true" class="data-connection">'+controls[i]+'</li>').droppable({
-			//       drop: handleDropEvent
-			//     });
-			// 	$(controlList).append(listItem);
-			// }
-
-					// var updatedConnections = [];				
-					// var lines = document.getElementsByTagName('line');
-					// for(var i = 0; i < lines.length; i++){
-					// 	updatedConnections.push({
-					// 		input: lines[i].getAttribute('input'),
-					// 		control: lines[i].getAttribute('control') 
-					// 	});
-					// }
-					// console.log(updatedConnections);
-					// socket.emit('update-connections', updatedConnections);
-
-			// $('body').append(btUpdate);	
-			// $('body').append(controlList);
-			// body.appendChild(svgCanvas);
-			// $('body').append(inputList);
-
-			// update();
+			update();
 		}
 
 		function update(){
 	        // Drawing connections read from server	
 	        for(var i = 0; i < connections.length; i++){
-	        	var input = document.getElementById(connections[i]['input']);
-	        	var control = document.getElementById(connections[i]['control']);
-	        	drawConnection(input, control);
+	        	$('#'+connections[i]['control']).val(connections[i]['input']);
 	        }
 		}
-
-		
 	}
 
 
@@ -160,7 +117,7 @@ app.main = (function(simulation) {
 		});
 
 		socket.on('data-update', function(data){
-			// appendData(data);
+			appendData(data);
 		});	
 
 		socket.on('draw-connections', function(data){
