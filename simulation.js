@@ -220,7 +220,10 @@ Simulation.prototype.update = function(){
 	//  LOOP #2: find food and seek prey
 	//  --------------------------------
 
-	for (var i=0; i<self.cells.length; i++){
+	// for (var i=0; i<self.cells.length; i++){
+	i = self.cells.length - 1;
+	while(i > -1){
+		console.log(i);
 
 		var c = self.cells[i];
 
@@ -269,10 +272,33 @@ Simulation.prototype.update = function(){
 		if ( c.age > self.envVar.mitosisWait ||  c.radius > self.envVar.maxRadius ) {
 			if (c.mitosis === false) {
 				c.mitosis = true;
-				divisions.push(i); // add to divisions set
-				if (this.contains(died,i) == false) died.push(i); // add to died set
+
+				console.log('-- cell '+i);
+
+				var newRadius = c.radius * 0.5;
+				if (newRadius < self.minRadius) newRadius = self.minRadius;
+
+				// create 2 new cells
+				for (var i=0; i<2; i++){
+
+					var vx = (i === 0)? c.vx : c.vx*-1, // opposite directions
+						vy = (i === 0)? c.vy : c.vy*-1;
+
+					var normV = c.normalize(vx,vy);
+
+					var x = c.x + normV.x*newRadius, // spread by radii
+						y = c.y + normV.y*newRadius;
+
+					self.cells.push( 
+						// create cell
+						new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
+					);
+					console.log('new cell idx: '+self.cells.length-1);				
+				}
+				// if (this.contains(died,i) == false) died.push(i); // add to died set
 			}
 		}
+		i--;
 	}
 
 
@@ -280,50 +306,50 @@ Simulation.prototype.update = function(){
 	//  LOOPs #2: divide or die
 	//  ----------------------------
 
-	var logs = false;
+	var logs = true;
 
-	// divide
-	if (divisions.length > 0) {
+	// // divide
+	// if (divisions.length > 0) {
 
-		console.log (divisions.length+' divisions');  logs = true;
+	// 	console.log (divisions.length+' divisions');  logs = true;
 
-		for (var i=0; i<divisions.length; i++){
-			var idx = divisions[i];
+	// 	for (var i=0; i<divisions.length; i++){
+	// 		var idx = divisions[i];
 
-			console.log('-- cell '+idx);
+	// 		console.log('-- cell '+idx);
 
-			var c = self.cells[idx];
+	// 		var c = self.cells[idx];
 
-			var newRadius = c.radius * 0.5;
-			if (newRadius < self.minRadius) newRadius = self.minRadius;
+	// 		var newRadius = c.radius * 0.5;
+	// 		if (newRadius < self.minRadius) newRadius = self.minRadius;
 
-			// create 2 new cells
-			for (var i=0; i<2; i++){
+	// 		// create 2 new cells
+	// 		for (var i=0; i<2; i++){
 
-				var vx = (i === 0)? c.vx : c.vx*-1, // opposite directions
-					vy = (i === 0)? c.vy : c.vy*-1;
+	// 			var vx = (i === 0)? c.vx : c.vx*-1, // opposite directions
+	// 				vy = (i === 0)? c.vy : c.vy*-1;
 
-				var normV = c.normalize(vx,vy);
+	// 			var normV = c.normalize(vx,vy);
 
-				var x = c.x + normV.x*newRadius, // spread by radii
-					y = c.y + normV.y*newRadius;
+	// 			var x = c.x + normV.x*newRadius, // spread by radii
+	// 				y = c.y + normV.y*newRadius;
 
-				self.cells.push( 
-					// create cell
-					new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
-				);
-				console.log('new cell idx: '+self.cells.length-1);
-			}
-		}
+	// 			self.cells.push( 
+	// 				// create cell
+	// 				new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
+	// 			);
+	// 			console.log('new cell idx: '+self.cells.length-1);
+	// 		}
+	// 	}
 
-	}
+	// }
 
-	if (divisions.length > 0){
-		var dSort = divisions.sort();
-		for (var i=dSort.length-1; i>=0; i--){
-			self.cells.splice(dSort[i],1); // remove cell that divided
-		}
-	}
+	// if (divisions.length > 0){
+	// 	var dSort = divisions.sort();
+	// 	for (var i=dSort.length-1; i>=0; i--){
+	// 		self.cells.splice(dSort[i],1); // remove cell that divided
+	// 	}
+	// }
 
 	//die
 	// var diedSort = [];
