@@ -59,7 +59,7 @@ app.main = (function(simulation) {
 				// input
 				var divInput = $('<div class="input"></div>');
 
-				var dropdown = $('<select id="'+controls[i]+'"></select>');
+				var dropdown = $('<select id="'+controls[i]['label']+'"></select>');
 				for(var j = 0; j < inputs.length; j++){
 					$(dropdown)
 						.append('<option value="'+inputs[j]+'">'+inputs[j]+'</option>')
@@ -76,7 +76,7 @@ app.main = (function(simulation) {
 
 				$(divControl)
 					.append('<h6>CONTROL</h6>')
-					.append('<p>'+controls[i]+'</p>')
+					.append('<p>'+controls[i]['label']+'</p>')
 					.append('<ul class="data-control"></ul>')
 					;
 					
@@ -115,7 +115,7 @@ app.main = (function(simulation) {
 		function update(){
 	        // Updating dropdowns based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
-	        	var dropdown = $('#'+connections[i]['control'])
+	        	var dropdown = $('#'+connections[i]['control']['label'])
 	        		.change(function(){
 	        			handleChange(this);
 	        		})
