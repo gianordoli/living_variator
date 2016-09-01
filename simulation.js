@@ -29,44 +29,24 @@ function Simulation (width,height,numCells,framerate, drawOnServer){ // construc
 	self.lastDrawTime = 0; // unix timestamp of last frame for fps calc
 
 	// cells
+	self.numCells = numCells;
 	self.cells = [];
 
 	// environmental variables
 	self.envVar = {
-		radius : 5, // init cell radius in canvas px
-		neighborhoodRadius : 50, // cell neighboorhood in canvas px
-		deathWait : 30, // # frames before death if cell is alone/crowded
-		accelX : 0, // accelerate global cell speed
-		accelY : 0
+		minRadius : 5, // cells cannot divide if < minRadius * 2
+		maxRadius : 30, // cells automatically divide if >= maxRadius
+		neighborhoodScale : 3, // neighborhoodScale * cell radius = neighborhoodRadius
+		mitosisWait : 180, // # frames before cell division
+		forceX : 0, // apply global directional force
+		forceY : 0,
+		acceleration: 0, // apply global acceleration
+		drag : 0 // simulates environmental drag (this should be small, eg 0.1)
 	};
 
 	// ----------------- SETUP
 
-	// populate cell array
-	for (var i=0; i<numCells; i++){
-
-		// pos
-		var x = self.envVar.radius + Math.random()*(self.width-self.envVar.radius*2); // between radius and width-radius
-		var y = self.envVar.radius + Math.random()*(self.height-self.envVar.radius*2);
-		// velocity
-		var vx, vy;
-		do {
-			vx = Math.random()*2 -1; // between -1 and 1
-			vy = Math.random()*2 -1;
-		} while (vx == 0 && vy == 0); // must have some initial velocity
-
-		var color = { h: 240, //0-360 hue... 240 blue, 360 red
-					  s: 100, //% sat
-					  l: 60, //% luma (100 == white)
-					  a: 0.8  //0-1 alpha
-					};
-		var nColor = { h: 240, s: 50, l: 40, a: 0.1 }; // neighborhood color
-
-		self.cells.push( 
-			new Cell(x, y, self.envVar.radius, vx, vy, self.envVar.neighborhoodRadius, self.envVar.deathWait, color, nColor) // create cell
-		);
-	}
-
+	self.setup();
 
 	// ----------------- LOOP intervals
 
@@ -102,7 +82,7 @@ Simulation.prototype.map = function(val,oldLo,oldHi,newLo,newHi,bClamp){
 	return newVal;
 }
 
-// ----------------------- util: dist
+// ----------------------- util: distance between x,y points
 Simulation.prototype.dist = function(x1,y1,x2,y2){
 
 	return Math.sqrt(Math.pow(x2-x1,2)+Math.pow(y2-y1,2));
@@ -113,6 +93,13 @@ Simulation.prototype.mag = function(x,y){
 	return Math.sqrt(x*x + y*y);
 }
 
+// ------------------------ util: array contains?
+Simulation.prototype.contains = function(array,value){
+	for (var i=0; i<array.length; i++){
+		if (array[i] === value) return true;
+	}
+	return false;
+}
 
 // ---------------------- update fps (to be run every second)
 
@@ -124,7 +111,7 @@ Simulation.prototype.updateFps = function(){ // util to update fps every second 
 	console.log("fps: "+self.fps);
 }
 
-// ---------------------- returns array of neighbor data of a cell in form: { cellIndex, distance }
+// ---------------------- returns array of neighbor data of a cell in form: { cellIndex, cellRadius, distance }
 
 Simulation.prototype.getNeighbors = function(cellIndex){
 
@@ -141,16 +128,50 @@ Simulation.prototype.getNeighbors = function(cellIndex){
 		if (i===cellIndex) continue; // skip self-comparison
 
 		var cn = self.cells[i];
+		var rad = cn.radius;
+		var ins = false;
 
 		// check if neighbor
-		var dist = c.distToNeighbor(cn.x,cn.y);
+		var dist = c.distToNeighbor(cn.x,cn.y,cn.radius);
 		if (dist < c.neighborhoodRadius){
-
-			nbs.push({ cellIndex: i, distance: dist});
+			if (c.radius > dist + cn.radius) ins = true; // if neighbor center is inside cell wall
+			nbs.push({ cellIndex: i, radius: rad, distance: dist, inside: ins });
 		}
 	}
 
-	return nbs;
+	return nbs; // returns array of cell indexes and distances
+}
+
+// ---------------------- setup
+Simulation.prototype.setup = function(){
+
+	var self = this;
+
+	// initialize cell array
+	for (var i=0; i<self.numCells; i++){
+
+		// radius - random between minRadius and maxRadius
+		var minRad = 10;//self.envVar.minRadius;
+		var maxRad = self.envVar.maxRadius; //* 0.5;
+		var radius = Math.random()*(maxRad-minRad)+minRad;
+
+		// pos
+		var x = Math.random()*(self.width-radius*2)+radius; // between radius and width-radius
+		var y = Math.random()*(self.height-radius*2)+radius; // r : h-r
+
+		// velocity
+		var vx, vy;
+		do {
+			vx = Math.random()*1 -1; // between -2 and 2
+			vy = Math.random()*1 -1;
+		} while (vx == 0 && vy == 0); // must have some initial velocity
+
+		self.cells.push( 
+			// create cell
+			new Cell(	x, y, radius, vx, vy,
+					 	self.envVar.neighborhoodScale, self.envVar.mitosisWait )
+		);
+	}
 }
 
 // ---------------------- update loop
@@ -159,8 +180,45 @@ Simulation.prototype.update = function(){
 
 	var self = this;
 
-	var collisions = new Set(); // keeps set of indexes of cells that collided
-	var deaths = new Set(); // keeps set of indexes of cells that died
+	var divisions = []; // keeps indices of cells that should divide
+	var feeding = []; // keeps indices of cells that are feeding
+	var died = []; // keeps indices of cells that are eaten
+
+
+	//  -------------------------
+	//  LOOP #1: update movements
+	//  -------------------------
+
+	for (var i=0; i<self.cells.length; i++){
+
+		var c = self.cells[i];
+		c.update( self.envVar.neighborhoodScale );
+
+		// ---------------------- bounce off walls
+
+		if (c.x > self.width - c.radius){ // right
+			c.vx *= -1;
+			c.x = self.width - c.radius;
+		}
+		else if (c.x < c.radius){ // left
+			c.vx *= -1;
+			c.x = c.radius;
+		}
+		if (c.y > self.height - c.radius) { // bottom
+			c.vy *= -1;
+			c.y = self.height - c.radius;
+		}
+		else if (c.y < c.radius){ // top
+			c.vy *= -1;
+			c.y = c.radius;
+		}
+
+	}
+
+
+	//  --------------------------------
+	//  LOOP #2: find food and seek prey
+	//  --------------------------------
 
 	for (var i=0; i<self.cells.length; i++){
 
@@ -168,140 +226,126 @@ Simulation.prototype.update = function(){
 
 		// ---------------------- check for neighbors
 
-		var neighbors = self.getNeighbors(i);
-		var numNeighbors = neighbors.length;
+		var neighbors = self.getNeighbors(i); // array of neigbors data: { index, radius, distance, eat }
+		c.numNeighbors = neighbors.length;
 
-		// ---------------------- check for collisions
+		// ---------------------- check for food and new prey (closest neighbor smaller than this cell)
+		/*
+		var food = 0;
+		var preyIdx = i; // init to self, otherwise will be index of prey cell
+		var preyDist = c.neighborhoodRadius; // init to neighborhoodRadius, otherwise will be dist to prey cell
 
-		if (c.age > c.deathWait){ // this cell must be old enough to collide
+		for (var n=0; n<c.numNeighbors; n++){
+			var nIdx = neighbors[n].cellIndex;
+			var nRad = neighbors[n].radius;
+			var nDist = neighbors[n].distance;
+			var nIn = neighbors[n].inside;
 
-			for (var n=0; n<numNeighbors; n++){
+			// if neighbor is smaller than me...
+			if (nRad < c.radius) {
 
-				var nIdx = neighbors[n].cellIndex;
-				var nDist = neighbors[n].distance;
-
-				var nCell = self.cells[nIdx];
-
-				if (nCell.age > nCell.deathWait){ // other cell must be old enough to collide
-
-					if (nDist < c.radius){
-
-						// later, kill cell
-						c.dead = true;
-						deaths.add(i);
-
-						// and spawn more
-						c.collided = true;
-						collisions.add(i);
-					}
+				if (nIn) { // food --- eat!
+					food += nRad; // add growth amount
+					if (this.contains(feeding,i) === false) feeding.push(i); // cell is feeding
+					if (this.contains(died, nIdx) === false) died.push(nIdx); // add eaten cell to died set
+				}
+				else if (nDist < preyDist) { // best new prey so far
+					preyIdx = nIdx;
 				}
 			}
 		}
 
-		// ---------------------- SIM RULES OF DEATH...
+		// eat
+		c.feed(food); // add food for cell to eat in next loop
 
-		// death ticker
+		// seek prey
 
-		// reset cases:
-		if (  (c.numNeighbors >= 4  && numNeighbors < 4) 			// was crowded, now not
-		   || (c.numNeighbors === 0 && numNeighbors > 0)) {			// was isolated, now not	
-			c.deathTick = 0;
-		}	
-		
-		if	(numNeighbors < 4 	 && numNeighbors > 0) {			// neither crowded nor isolated 	
-			c.deathTick = 0;
+		if (preyIdx != i) {
+			c.seek( self.cells[preyIdx].x, self.cells[preyIdx].y );
 		}
-		else {													// crowded or isolated
-			c.deathTick++;
-			// update color
-			c.color.h = self.map(c.deathTick,0,c.deathWait,240,360);
+		*/
+
+		// ---------------------- check for mitosis (due to cell age or size)
+		if ( c.age > self.envVar.mitosisWait ||  c.radius > self.envVar.maxRadius ) {
+			if (c.mitosis === false) {
+				c.mitosis = true;
+				divisions.push(i); // add to divisions set
+				if (this.contains(died,i) == false) died.push(i); // add to died set
+			}
 		}
+	}
 
-		c.numNeighbors = numNeighbors; // save num neighbors
 
-		if (c.deathTick >= c.deathWait) { // check if dead
-			c.dead = true;
-			deaths.add(i);
-		}
+	//  ----------------------------
+	//  LOOPs #2: divide or die
+	//  ----------------------------
 
-		// ---------------------- lastly, update cell position, if still alive
+	var logs = false;
 
-		if (c.dead === false) {
+	// divide
+	if (divisions.length > 0) {
 
-			c.update( self.envVar.accelX, self.envVar.accelY, self.envVar.neighborhoodRadius, self.envVar.deathWait);
+		console.log (divisions.length+' divisions');  logs = true;
 
-			// ---------------------- bounce off walls
+		for (var i=0; i<divisions.length; i++){
+			var idx = divisions[i];
 
-			if (c.x > self.width - c.radius){ // right
-				c.vx *= -1;
-				c.x = self.width - c.radius;
-			}
-			else if (c.x < c.radius){ // left
-				c.vx *= -1;
-				c.x = c.radius;
-			}
-			if (c.y > self.height - c.radius) { // bottom
-				c.vy *= -1;
-				c.y = self.height - c.radius;
-			}
-			else if (c.y < c.radius){ // top
-				c.vy *= -1;
-				c.y = c.radius;
+			console.log('-- cell '+idx);
+
+			var c = self.cells[idx];
+
+			var newRadius = c.radius * 0.5;
+			if (newRadius < self.minRadius) newRadius = self.minRadius;
+
+			// create 2 new cells
+			for (var i=0; i<2; i++){
+
+				var vx = (i === 0)? c.vx : c.vx*-1, // opposite directions
+					vy = (i === 0)? c.vy : c.vy*-1;
+
+				var normV = c.normalize(vx,vy);
+
+				var x = c.x + normV.x*newRadius, // spread by radii
+					y = c.y + normV.y*newRadius;
+
+				self.cells.push( 
+					// create cell
+					new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
+				);
+				console.log('new cell idx: '+self.cells.length-1);
 			}
 		}
 
 	}
 
-	// ---------------------- now spawn new cells based on collisions
-	
-	if (collisions.size > 0) console.log (collisions.size+' collisions');
-	for (var idx in collisions){
-
-		var c = self.cells[idx];
-
-		var color = { h: 240, s: 100, l: 60, a: 0.8 }; // default cell color
-		var nColor = { h: 240, s: 50, l: 40, a: 0.1 }; // default neighborhood color
-
-		// create 2 new cells
-		for (var j=0; j<2; j++){
-
-			var vx, vy;
-			do {
-				vx = Math.random()*2 -1; // between -1 and 1
-				vy = Math.random()*2 -1;
-			} while (vx == 0 && vy == 0); // must have some initial velocity
-
-			var magV = self.mag(vx,vy), // calc magnitude and direction of velocity
-				normX = vx/magV,
-				normY = vy/magV;
-
-			var x = c.x + normX*c.radius*2,
-				y = c.y + normY*c.radius*2;
-
-			self.cells.push( 
-				new Cell(  // create cell
-						x, y, 
-						self.envVar.radius, 
-						vx, vy, 
-						self.envVar.neighborhoodRadius, 
-						self.envVar.deathWait, 
-						color, nColor)
-			);
+	if (divisions.length > 0){
+		var dSort = divisions.sort();
+		for (var i=dSort.length-1; i>=0; i--){
+			self.cells.splice(dSort[i],1); // remove cell that divided
 		}
 	}
 
-	// ---------------------- now, delete dead cells from cell array
+	//die
+	// var diedSort = [];
+	// if (died.length > 0) {
+	// 	console.log(died.length+' deaths');
+	// 	logs = true;
+	// 	diedSort = died.sort(); // set -> sorted array to iterate backwards
+	// }
 
-	var deathsArray = Array.from(deaths).sort(); // cvt to sorted array to iterate backwards
-	if (deathsArray.length > 0) console.log(deathsArray.length+' deaths');
+	// for (var i=diedSort.length-1; i>=0; i--) {
+	// 	self.cells.splice(diedSort[i],1); // remove from cell array
+	// }
+	// if (died.length > 0) {
+	// 	console.log(self.cells.length+' cells now alive');
+	// 	logs = true;
+	// }
 
-	for (var i=deathsArray.length-1; i>=0; i--){
-
-		self.cells.splice(deathsArray[i],1); // remove from array
+	self.numCells = self.cells.length;
+	if (logs) {
+		console.log(self.numCells + ' cells now alive\n');
 	}
-	if (deathsArray.length > 0) console.log(this.cells.length+' cells now alive')
 
-	
 
 	// ---------------------- draw on server?
 
@@ -324,7 +368,7 @@ Simulation.prototype.update = function(){
 
 
 
-// ---------------------- draw loop
+// ---------------------- draw loop - [DEPRECATED: REQUIRES NODE-CANVAS]
 
 Simulation.prototype.draw = function(){
 
