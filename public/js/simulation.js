@@ -54,8 +54,8 @@ var simulation = {
 			var nV = this.normalize(c.vx,c.vy);
 			var bx = c.x+nV.x*c.radius,
 				by = c.y+nV.y*c.radius;
-			var ex = bx+c.vx*50,
-				ey = by+c.vy*50;
+			var ex = bx+c.vx*10,
+				ey = by+c.vy*10;
 			ctx.moveTo(bx,by);
 			ctx.lineTo(ex,ey);
 			ctx.stroke();

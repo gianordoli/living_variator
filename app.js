@@ -145,7 +145,7 @@ var emitCanvas = function(filename){
 }
 
 // UNCOMMENT LATER!!!
-var simulation = new Simulation(1280,720,1,30,false); // width, height, fps, drawOnServer?
+var simulation = new Simulation(1280,720,20,30,false); // width, height, fps, drawOnServer?
 //setInterval(emitCanvas, 1000/20); // draw to client at specific fps
 simulation.onDraw = emitCanvas;
 

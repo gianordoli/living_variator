@@ -35,8 +35,8 @@ function Simulation (width,height,numCells,framerate, drawOnServer){ // construc
 	// environmental variables
 	self.envVar = {
 		minRadius : 5, // cells cannot divide if < minRadius * 2
-		maxRadius : 30, // cells automatically divide if >= maxRadius
-		neighborhoodScale : 3, // neighborhoodScale * cell radius = neighborhoodRadius
+		maxRadius : 100, // cells automatically divide if >= maxRadius
+		neighborhoodScale : 10, // neighborhoodScale * cell radius = neighborhoodRadius
 		mitosisWait : 180, // # frames before cell division
 		forceX : 0, // apply global directional force
 		forceY : 0,
@@ -151,8 +151,8 @@ Simulation.prototype.setup = function(){
 	for (var i=0; i<self.numCells; i++){
 
 		// radius - random between minRadius and maxRadius
-		var minRad = 10;//self.envVar.minRadius;
-		var maxRad = self.envVar.maxRadius; //* 0.5;
+		var minRad = self.envVar.minRadius;
+		var maxRad = self.envVar.maxRadius * 0.5;
 		var radius = Math.random()*(maxRad-minRad)+minRad;
 
 		// pos
@@ -162,8 +162,8 @@ Simulation.prototype.setup = function(){
 		// velocity
 		var vx, vy;
 		do {
-			vx = Math.random()*1 -1; // between -2 and 2
-			vy = Math.random()*1 -1;
+			vx = Math.random()*2 -2; // between -2 and 2
+			vy = Math.random()*2 -2;
 		} while (vx == 0 && vy == 0); // must have some initial velocity
 
 		self.cells.push( 
@@ -230,7 +230,7 @@ Simulation.prototype.update = function(){
 		c.numNeighbors = neighbors.length;
 
 		// ---------------------- check for food and new prey (closest neighbor smaller than this cell)
-		/*
+		
 		var food = 0;
 		var preyIdx = i; // init to self, otherwise will be index of prey cell
 		var preyDist = c.neighborhoodRadius; // init to neighborhoodRadius, otherwise will be dist to prey cell
@@ -263,13 +263,13 @@ Simulation.prototype.update = function(){
 		if (preyIdx != i) {
 			c.seek( self.cells[preyIdx].x, self.cells[preyIdx].y );
 		}
-		*/
+		
 
 		// ---------------------- check for mitosis (due to cell age or size)
 		if ( c.age > self.envVar.mitosisWait ||  c.radius > self.envVar.maxRadius ) {
-			if (c.mitosis === false) {
-				c.mitosis = true;
-				divisions.push(i); // add to divisions set
+
+			if (c.radius * 0.5 >= self.envVar.minRadius) { // only if big enough
+				if (this.contains(divisions,i) === false) divisions.push(i); // add to divisions set
 				if (this.contains(died,i) == false) died.push(i); // add to died set
 			}
 		}
@@ -277,7 +277,7 @@ Simulation.prototype.update = function(){
 
 
 	//  ----------------------------
-	//  LOOPs #2: divide or die
+	//  LOOPs #3: divide or die
 	//  ----------------------------
 
 	var logs = false;
@@ -289,57 +289,62 @@ Simulation.prototype.update = function(){
 
 		for (var i=0; i<divisions.length; i++){
 			var idx = divisions[i];
-
-			console.log('-- cell '+idx);
-
+	
 			var c = self.cells[idx];
 
 			var newRadius = c.radius * 0.5;
 			if (newRadius < self.minRadius) newRadius = self.minRadius;
 
 			// create 2 new cells
-			for (var i=0; i<2; i++){
 
-				var vx = (i === 0)? c.vx : c.vx*-1, // opposite directions
-					vy = (i === 0)? c.vy : c.vy*-1;
+			// cell 1
+			var vx = c.vy; // rotate 90 clockwise
+			var vy = -c.vx;
 
-				var normV = c.normalize(vx,vy);
+			var normV = c.normalize(vx,vy);
 
-				var x = c.x + normV.x*newRadius, // spread by radii
-					y = c.y + normV.y*newRadius;
+			var x = c.x + normV.x*newRadius; // spread by radii
+			var y = c.y + normV.y*newRadius;
 
-				self.cells.push( 
-					// create cell
-					new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
-				);
-				console.log('new cell idx: '+self.cells.length-1);
-			}
+			self.cells.push( 
+				// create cell
+				new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
+			);
+
+			// cell 2
+			vx = -c.vy; // rotate 90 counter-clockwise
+			vy = c.vx;
+
+			normV = c.normalize(vx,vy);
+
+			x = c.x + normV.x*newRadius; // spread by radii
+			y = c.y + normV.y*newRadius;
+
+			self.cells.push( 
+				// create cell
+				new Cell( x, y, newRadius, vx, vy, self.envVar.neighborhoodScale )
+			);
+
 		}
 
 	}
 
-	if (divisions.length > 0){
-		var dSort = divisions.sort();
-		for (var i=dSort.length-1; i>=0; i--){
-			self.cells.splice(dSort[i],1); // remove cell that divided
-		}
-	}
 
 	//die
-	// var diedSort = [];
-	// if (died.length > 0) {
-	// 	console.log(died.length+' deaths');
-	// 	logs = true;
-	// 	diedSort = died.sort(); // set -> sorted array to iterate backwards
-	// }
+	var diedSort = [];
+	if (died.length > 0) {
+		console.log(died.length+' deaths');
+		logs = true;
+		diedSort = died.sort(); // set -> sorted array to iterate backwards
+	}
 
-	// for (var i=diedSort.length-1; i>=0; i--) {
-	// 	self.cells.splice(diedSort[i],1); // remove from cell array
-	// }
-	// if (died.length > 0) {
-	// 	console.log(self.cells.length+' cells now alive');
-	// 	logs = true;
-	// }
+	for (var i=diedSort.length-1; i>=0; i--) {
+		self.cells.splice(diedSort[i],1); // remove from cell array
+	}
+	if (died.length > 0) {
+		console.log(self.cells.length+' cells now alive');
+		logs = true;
+	}
 
 	self.numCells = self.cells.length;
 	if (logs) {

@@ -19,8 +19,6 @@ function Cell(x, y, radius, vx, vy, neighborhoodScale){
 	self.numNeighbors = 0;
 	self.age = 0;
 	self.hunger = 1; // scale 0-1 - how to calc?
-	self.mitosis = false;
-	self.index = 0;
 }
 
 Cell.prototype.applyForce = function(forceX, forceY){
@@ -42,6 +40,7 @@ Cell.prototype.feed = function(food){ // adds food to be eaten
 }
 
 Cell.prototype.eat = function() { // eats added food
+	if (this.food > 0) this.age = 0;
 	this.radius += this.food;
 	this.food = 0;
 }
