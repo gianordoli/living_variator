@@ -36,7 +36,7 @@ function Simulation (width,height,numCells,framerate, drawOnServer){ // construc
 	self.envVar = {
 		minRadius : 5, // cells cannot divide if < minRadius * 2
 		maxRadius : 100, // cells automatically divide if >= maxRadius
-		neighborhoodScale : 10, // neighborhoodScale * cell radius = neighborhoodRadius
+		neighborhoodScale : 3, // neighborhoodScale * cell radius = neighborhoodRadius
 		mitosisWait : 180, // # frames before cell division
 		forceX : 0, // apply global directional force
 		forceY : 0,
