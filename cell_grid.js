@@ -1,28 +1,29 @@
 
-// ----------
-// Grid class
-// ----------
+// ---------------
+// Cell Grid class
+// ---------------
 
 var Util = require('./game_utils'); // utils
 var Cell = require('./cell'); // cell class
 var Vector = require('./vec'); // vector class 
 
 
-function CellGrid(width, height, cellArray){
+function CellGrid(width, height, wrap){ // default wrap to true
 
 	this.width = isNaN(width) ? 0 : width;
 	this.height = isNaN(height) ? 0 : height;
 	this.numCells = width * height;
 	this.cells = [];
-	this.initCells(cellArray);
+	this.wrap = (typeof(wrap) === "boolean") wrap : true;
+	this.initCells();
 }
 
 // ----------
 // FUNCTIONS:
 // ----------
 
-CellGrid.prototype.initCells = function(wrap){ // wrap - grid edges wrap as neighbors, defaults true
-	this.clear();
+CellGrid.prototype.initCells = function(wrap){
+	this.cells = this.cells.splice(0,this.cells.length); // splice to 0 / clear
 	// init cells with x,y position
 	for (var x=0; x<this.width; x++){
 		for (var y=0; y<this.height; y++){
@@ -30,23 +31,17 @@ CellGrid.prototype.initCells = function(wrap){ // wrap - grid edges wrap as neig
 		}
 	}
 	// set cell neighbors
-	wrap = (typeof(wrap) === "boolean") wrap : true;
+	wrap = (typeof(wrap) === "boolean") wrap : this.wrap;
 
 	for (var x=0; x<this.width; x++){
 		for (var y=0; y<this.height; y++){
 
 			var idx = y*width+x;
 			var n = this.findNeighbors(x,y,wrap);
-			this.cells[[idx].addNeighbors(n);
+			this.cells[idx].addNeighbors(n);
 		}
 	}
 	return this.cells;
-}
-CellGrid.prototype.clear = function(){
-	this.width = 0;
-	this.height = 0;
-	this.numCells = 0;
-	this.cells = this.cells.splice(0,this.cells.length); // splice to 0 / clear
 }
 CellGrid.prototype.getCell = function(x,y,wrap){
 
@@ -58,7 +53,7 @@ CellGrid.prototype.getCell = function(x,y,wrap){
 
 	else { // x,y
 
-		var = (typeof(wrap) === "boolean") ? wrap : false;
+		wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
 		var idx;
 		if (x < 0 || y < 0 || x >= this.width || y >= this.height){
 			if (wrap) {
@@ -108,7 +103,7 @@ CellGrid.prototype.findNeighbors = function(x,y,wrap){
 	var c = this.getCell(x,y);
 	var n = [];
 	if (typeof(c) === "undefined") return n;
-	wrap = (typeof(wrap) === "boolean") ? wrap : false;
+	wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
 	// neighbors
 	// -- clockwise starting with top left
 	var tl = this.getCell(x-1,y-1,wrap);
