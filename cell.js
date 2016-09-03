@@ -3,120 +3,135 @@
 // Cell class
 // ----------
 
+var Vector = require('./vec'); // vector class 
 
-function Cell(x, y, radius, vx, vy, neighborhoodScale){
 
-	var self = this;
-	self.x = x; // initial position
-	self.y = y;
-	self.radius = radius; // initial radius
-	self.vx = vx; // initial velocity
-	self.vy = vy;
-	self.accelX = 0;
-	self.accelY = 0;
-	self.food = 0;
-	self.neighborhoodRadius = neighborhoodScale * radius;
-	self.numNeighbors = 0;
-	self.age = 0;
-	self.hunger = 1; // scale 0-1 - how to calc?
+function Cell(x, y, name, neighbors, radius, velocity, data){
+
+	this.x = isNaN(x) ? 0 : x; // position
+	this.x = isNaN(y) ? 0 : x;
+	this.pos = new Vec(this.x,this.y);
+	this.name = name || "cell";
+	this.radius = isNaN(radius) ? 0 : radius;
+	this.neighbors = [];
+	this.addNeighbors(neighbors);
+	this.velocity = new Vec();
+	this.makeVelocity(velocity);
+	this.acceleration = new Vec();
+	this.age = 0;
+	this.data = data || {};
 }
 
-Cell.prototype.applyForce = function(forceX, forceY){
-	this.accelX += forceX;
-	this.accelY += forceY;
-}
+// ----------
+// FUNCTIONS:
+// ----------
 
-Cell.prototype.applyDrag = function(drag){
-	var speed = magnitude(this.vx,this.vy);
-	var dragMag = drag * speed * speed;
-	dragVec = normalize(this.vx*-1,this.vy*-1);
-	dragVec.x *= dragMag;
-	dragVec.y *= dragMag;
-	this.applyForce(dragVec.x,dragVec.y);
-}
 
-Cell.prototype.feed = function(food){ // adds food to be eaten
-	this.food += food;
-}
+// -------------------------------- update
 
-Cell.prototype.eat = function() { // eats added food
-	if (this.food > 0) this.age = 0;
-	this.radius += this.food;
-	this.food = 0;
-}
 
-Cell.prototype.update = function(neighborhoodScale){
+Cell.prototype.update = function(){
 
 	this.age++;
-	this.eat();
 
-	this.vx += this.accelX;
-	this.vy += this.accelY;
-	this.x += this.vx;
-	this.y += this.vy;
-
-	this.neighborhoodRadius = this.radius * neighborhoodScale;
-
-	this.accelX = 0;
-	this.accelY = 0;
-}
-
-Cell.prototype.seek = function(preyX, preyY){
-
-	var desVx = preyX - this.x;
-	var desVy = preyY - this.y;
-	var desNorm = this.normalize(desVx,desVy);
-	var vMag = this.magnitude(this.vx,this.vy);
-	desVx = desNorm.x * vMag; // maybe change maxSpeed to function input?
-	desVy = desNorm.y * vMag; // or base it on current velocity magnitude?
-	var steerX = desVx - this.vx;
-	var steerY = desVy - this.vy;
-	// can add max force here - i.e. steerX.limit(maxForceX); steerY.limit(maxForceY);
-	// max force could be tied to hunger?
-	this.applyForce(steerX,steerY);
-}
-
-Cell.prototype.normalize = function(vx,vy){ // returns normalized vector (e.g. direction) (as x,y object)
-	var mag = this.magnitude(vx,vy);
-	if (mag === 0) return { x: 0, y: 0 };
-	return { x : vx/mag, y : vy/mag };
-}
-
-Cell.prototype.magnitude = function(vx,vy){
-	if (vx===0 && vy===0) return 0;
-	return Math.sqrt((vx*vx) + (vy*vy));
+	// movement
+	this.velocity.add(this.acceleration);
+	this.acceleration.x = 0; this.acceleration.y = 0;
+	this.pos.add(this.velocity);
+	this.x = this.pos.x;
+	this.y = this.pos.y;
+	return this;
 }
 
 
-Cell.prototype.distToNeighbor = function(x,y,neighborRadius){ 
-// returns distance if neighbor, or this.neighborhoodRadius if not
-// if no neighborRadius given, dist to cell center, otherwise dist to cell wall
+// -------------------------------- neighbors
 
-	var nRadius = neighborRadius || 0;
-	// check bounding box
-	if (Math.abs(this.x-x) -nRadius < this.neighborhoodRadius
-		&& Math.abs(this.y-y) -nRadius < this.neighborhoodRadius){
-
-		// check radial dist
-		var dist = this.distanceTo(x,y) - nRadius;
-		if (dist < this.neighborhoodRadius) return dist;
+Cell.prototype.addNeighbors = function(neighbors){
+	if (Array.isArray(neighbors)){
+		for (var i=0; i<neighbors.length; i++){
+			if (neighbors[i] instanceof Cell){
+				this.neighbors.push(neighbors[i]);
+			}
+		}
+	} else if (neighbors instanceof Cell){
+		this.neighbors.push(neighbor);
 	}
-	return this.neighborhoodRadius;
+	return this.neighbors;
+}
+Cell.prototype.addNeighbor = function(neighbor){
+	return this.addNeighbors(neighbor);
+}
+Cell.prototype.clearNeighbors = function(){
+	this.neighbors.splice(0,this.neighbors.length); // splice to 0 / clear
+	return this.neighbors;
+}
+Cell.prototype.setNeighbors = function(neighbors){
+	if (this.neighbors.length > 0) this.clearNeighbors();
+	this.addNeighbors(neighbors);
+	return this.neighbors;
 }
 
-Cell.prototype.isCollision = function(x,y){
 
-	// check bounding box
-	if (Math.abs(this.x-x) < this.radius && Math.abs(this.y-y) < this.radius){	
-		// check radial dist
-		if (this.distanceTo(x,y) < this.radius) return true;
+// -------------------------------- forces
+
+Cell.prototype.makeVelocity = function(velocity){
+	if (velocity instanceof Vec){
+		this.velocity.copyFrom(velocity);
+	}
+	return this.velocity;
+}
+Cell.prototype.applyForce = function(force){
+	if (force instanceof Vec){
+		this.acceleration.add(force);
+	} else if (typeof(force) === "number"){
+		this.acceleration.multiply(force);
+	}
+	return this.acceleration;
+}
+Cell.prototype.accelerate = function(force){
+	return this.applyForce(force);
+}
+Cell.prototype.applyDrag = function(drag){
+	var dragVec = new Vec();
+	if (typeof(drag) === "number"){
+		var speed = this.velocity.magnitude();
+		var dragMag = drag * speed * speed;
+		dragVec.copyFrom(this.velocity);
+		dragVec.reverse().normalize().multiply(dragMag);
+	}
+	return this.applyForce(dragVec);
+}
+
+Cell.prototype.seek = function(target, maxSpeed){
+	var steer = new Vec();
+	if (target instanceof Vec){
+		var dir = target.copy();
+		dir.subtract(this.pos).normalize();
+		var mag = this.velocity.magnitude();
+		if (isNaN(maxSpeed) === false){
+			mag = maxSpeed;
+		}
+		dir.multiply(mag); // either maxSpeed or this.velocity.magnitude()
+		steer = dir.subtract(this.velocity);
+		// can add max force here - i.e. steer.limit(maxForce);
+	}
+	return this.applyForce(steer);
+}
+
+
+// -------------------------------- collision
+
+Cell.prototype.isCollision = function(cell){
+	if (cell instanceof Cell) {
+		if (this.positition.distanceTo(cell.position) <= this.radius+cell.radius){
+			return true;
+		}
+	} else if (cell instanceof Vec){
+		if (this.position.distanceTo(cell) <= this.radius){
+			return true;
+		}
 	}
 	return false;
-}
-
-Cell.prototype.distanceTo = function(x,y){
-
-	return Math.sqrt((this.x-x)*(this.x-x)+(this.y-y)*(this.y-y));
 }
 
 module.exports = Cell;
