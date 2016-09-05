@@ -3,22 +3,21 @@
 // Cell class
 // ----------
 
-var Vector = require('./vec'); // vector class 
+var Vec = require('./vec'); // vector class 
 
 
 function Cell(x, y, name, neighbors, radius, velocity, data){
 
 	this.x = isNaN(x) ? 0 : x; // position
-	this.x = isNaN(y) ? 0 : x;
+	this.x = isNaN(y) ? 0 : y;
 	this.pos = new Vec(this.x,this.y);
-	this.name = name || "cell";
+	this.name = name || this.x+','+this.y;
 	this.radius = isNaN(radius) ? 0 : radius;
 	this.neighbors = [];
 	this.addNeighbors(neighbors);
 	this.velocity = new Vec();
 	this.makeVelocity(velocity);
 	this.acceleration = new Vec();
-	this.age = 0;
 	this.data = data || {};
 }
 

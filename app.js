@@ -111,31 +111,29 @@ function dataUpdate(){
 }
 
 
-/*---------- SIMULATION  ----------*/
+/*---------- CONWAY GAME ----------*/
 
-var Simulation = require('./simulation');
+var Conway = require('./conway');
 
-var emitCanvas = function(filename){
+var emitConwayGame = function(data){
 	if (connectedUsers > 0){
-		//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()}); // send dataURL
-		//io.sockets.emit('simulation', { type: 'URL': buffer: filename }); // send filename of saved png
-		// simulation.canvas.toBuffer(function(err,buf){
-		// 	if (err) throw err;
-		//  	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')}); // send img buffer as base64
-		//  	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf}); // send raw img buffer (to encode base64 on client)
-		// });
         io.sockets.emit('simulation', {
-            type: 'cellData',
-            buffer: simulation.cells, 
-            info: { width : simulation.width, height: simulation.height, fps: simulation.fps } 
+            type: 'conway',
+            width: data.width,
+            height: data.height,
+            cells: data.cells,
+            output: data.output,
+            fps: data.fps;
         });
 	}
 }
 
-// UNCOMMENT LATER!!!
-var simulation = new Simulation(1280,720,50,30,false); // width, height, fps, drawOnServer?
-//setInterval(emitCanvas, 1000/20); // draw to client at specific fps
-simulation.onDraw = emitCanvas;
+var conway = new Conway(1280,720,30); // w, h, fps
+conway.setup();
+var draw = conway.onDraw(function(err,data){ /*emitConwayGame(data);*/ console.log("drawing!"); });
+if (draw) console.log("set draw callback successfully");
+else console.log("error setting draw callback");
+
 
 /*---------- DATA CONNECTION  ----------*/
 var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];

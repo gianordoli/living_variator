@@ -14,8 +14,9 @@ function Game (width,height,framerate) { // constructor
 
 	this.width = isNaN(width) ? 100 : width; // default 100 width
 	this.height = isNaN(height) ? 80 : height; // default 80 height
-	this.grid = new CellGrid(width,height);
+	this.grid = new Grid(width,height);
 	this.numCells = this.width*this.height;
+	this.cells = this.grid.cells;
 
 	// fps
 
@@ -25,14 +26,9 @@ function Game (width,height,framerate) { // constructor
 	this.nFramesThisSec = 0;  // frame ticker
 	this.lastDrawTime = 0; // unix timestamp of last frame for fps calc
 
-	// ----------------- LOOP intervals
-	var self = this;
-
-	// update() function runs at target fps
-	setInterval(function(){ self.update(); }, 1000/this.targetFps); 
-
-	// every second, average the per-frame fps
-	setInterval(function(){ self.updateFps(); }, 1000);
+	// loop ids
+	this.updateId = 0;
+	this.fpsId = 0;
 
 }
 
@@ -41,69 +37,72 @@ function Game (width,height,framerate) { // constructor
 // FUNCTIONS:
 // ----------
 
-// ---------------------- setup
+// ---------------------- start
 
-Simulation.prototype.setup = function(){
+Game.prototype.start = function(){
 
-	// initialize cell array
-	for (var i=0; i<this.numCells; i++){
+	// ----------------- LOOP intervals
+	var self = this;
 
-		// radius - random between minRadius and maxRadius
-		var minRad = self.envVar.minRadius;
-		var maxRad = self.envVar.maxRadius * 0.5;
-		var radius = Math.random()*(maxRad-minRad)+minRad;
+	// update() function runs at target fps
+	this.updateId = setInterval(function(){ self.update(); }, 1000/this.targetFps ); 
 
-		// pos
-		var x = Math.random()*(self.width-radius*2)+radius; // between radius and width-radius
-		var y = Math.random()*(self.height-radius*2)+radius; // r : h-r
+	// every second, average the per-frame fps
+	this.fpsId = setInterval(function(){ self.updateFps(); }, 1000);
 
-		// velocity
-		var vx, vy;
-		do {
-			vx = Math.random()*2 -2; // between -2 and 2
-			vy = Math.random()*2 -2;
-		} while (vx == 0 && vy == 0); // must have some initial velocity
-
-		self.cells.push( 
-			// create cell
-			new Cell(	x, y, radius, vx, vy,
-					 	self.envVar.neighborhoodScale, self.envVar.mitosisWait )
-		);
-	}
+	return this;
 }
 
-// ---------------------- setup
-
-Simulation
+// ---------------------- stop
+Game.prototype.stop = function(){
+	if (this.updateId != 0){
+		clearInterval(this.updateId);
+		this.updatedId = 0;
+	}
+	if (this.fpsId != 0){
+		clearInterval(this.fpsId);
+		this.fpsId = 0;
+	}
+	return this;
+}
 
 
 // ---------------------- update fps (to be run every second)
 
-Simulation.prototype.updateFps = function(){ // util to update fps every second (simply counts frames)
-	var self = this;
-	self.fps = self.sumFps / self.nFramesThisSec;
-	self.sumFps = 0;
-	self.nFramesThisSec = 0;
-	console.log("fps: "+self.fps);
+Game.prototype.updateFps = function(){ // util to update fps every second (simply counts frames)
+	this.fps = this.sumFps / this.nFramesThisSec;
+	this.sumFps = 0;
+	this.nFramesThisSec = 0;
+	console.log("fps: "+this.fps);
 }
 
+// ---------------------- update loop
+
+Game.prototype.update = function(){ }
+
+
+module.exports = Game;
+
+
+
+
+
 // ---------------------- returns array of neighbor data of a cell in form: { cellIndex, cellRadius, distance }
-
-Simulation.prototype.getNeighbors = function(cellIndex){
-
-	var self = this;
-
-	var c = self.cells[cellIndex];
-
-	var nR = c.neighborhoodRadius;
+/*
+Game.prototype.getNeighborsByRadius = function(cellIndex, radius){
 
 	var nbs = [];
 
-	for (var i=0; i<self.cells.length; i++){
+	if (isNaN(cellIndex) || cellIndex<0 || cellIndex>this.cells.length || isNaN(radius))
+		return nbs;
+
+	var c = this.cells[cellIndex];
+
+	for (var i=0; i<this.cells.length; i++){
 
 		if (i===cellIndex) continue; // skip self-comparison
 
-		var cn = self.cells[i];
+		var cn = this.cells[i];
 		var rad = cn.radius;
 		var ins = false;
 
@@ -117,8 +116,9 @@ Simulation.prototype.getNeighbors = function(cellIndex){
 
 	return nbs; // returns array of cell indexes and distances
 }
+*/
 
-
+/*
 
 // ---------------------- update loop
 
@@ -355,11 +355,7 @@ Simulation.prototype.draw = function(){
 
 }
 
-Simulation.prototype.onDraw = function(){
-	// to be overridden
-}
-
-module.exports = Simulation;
+*/
 
 /*
 Simulation.prototype.emitCanvas(filename){
