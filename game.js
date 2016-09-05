@@ -24,7 +24,7 @@ function Game (width,height,framerate) { // constructor
 	this.fps = 0; // fps tracker
 	this.sumFps = 0; // fps calc sum over 1 sec
 	this.nFramesThisSec = 0;  // frame ticker
-	this.lastDrawTime = 0; // unix timestamp of last frame for fps calc
+	this.lastDrawTime = Date.now(); // unix timestamp of last frame for fps calc
 
 	// loop id
 	this.fpsId = 0;
@@ -57,6 +57,17 @@ Game.prototype.stop = function(){
 		this.fpsId = 0;
 	}
 	return this;
+}
+
+// ---------------------- tick -- call for fps update
+Game.prototype.tick = function(){
+
+	// ---------------------- calc per-frame fps
+
+	this.nFramesThisSec++;
+	var elapsedMs = Date.now() - this.lastDrawTime;
+	this.sumFps += 1000/elapsedMs;
+	this.lastDrawTime = Date.now();
 }
 
 

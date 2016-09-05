@@ -117,7 +117,7 @@ var Conway = require('./conway');
 
 var emitConwayGame = function(data){
 	if (connectedUsers > 0){
-        io.sockets.emit('simulation', {
+        io.sockets.emit('game', {
             type: 'conway',
             width: data.width,
             height: data.height,

@@ -14,7 +14,7 @@ function Cell(x, y, name, neighbors, radius, velocity, data){
 	this.name = name || this.x+','+this.y;
 	this.radius = isNaN(radius) ? 0 : radius;
 	this.neighbors = [];
-	this.neighborIndices = [];
+	this.util = new Util();
 	this.addNeighbors(neighbors);
 	this.velocity = new Vec();
 	this.makeVelocity(velocity);
@@ -50,10 +50,10 @@ Cell.prototype.update = function(){
 Cell.prototype.addNeighbors = function(neighbors){
 	if (Array.isArray(neighbors)){
 		if (neighbors.length > 0){
-			if (isNaN(neighbors[0]) === false){ // indices
+			if (this.util.isNum(neighbors[0])){ // indices
 				for (var i=0; i<neighbors.length; i++){
 					if (isNaN(neighbors[i]) === false){
-						this.neighborsIndices.push(neighbors[i]);
+						this.neighbors.push(neighbors[i]);
 					}
 					else {
 						this.clearNeighbors();
@@ -61,23 +61,10 @@ Cell.prototype.addNeighbors = function(neighbors){
 					}
 				}
 			}
-			else if (neighbors[0] instanceof Cell){
-				for (var i=0; i<neighbors.length; i++){
-					if (neighbors[i] instanceof Cell){
-						this.neighbors.push(neighbors[i]);
-					}
-					else {
-						this.clearNeighbors();
-						console.log("error adding neighbors: not a Cell at neighbors["+i+']');
-					}
-				}
-			}
-			else console.log("error adding neighbors: neighbors array neither indices nor Cells");
+			else console.log("error adding neighbors: neighbors array not indices");
 		}
-	} else if (neighbors instanceof Cell){
+	} else if (this.util.isNum(neighbors)){
 		this.neighbors.push(neighbors);
-	} else if (isNaN(neighbors) === false){
-		this.neighborsIndices.push(neighbors);
 	}
 	return this.neighbors;
 }

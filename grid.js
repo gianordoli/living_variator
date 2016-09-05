@@ -39,7 +39,7 @@ Grid.prototype.initCells = function(wrap){
 		for (var x=0; x<this.width; x++){
 
 			var idx = y*this.width+x;
-			var n = this.findNeighbors(x,y,wrap);
+			var n = this.findNeighborIndices(x,y,wrap);
 			this.cells[idx].addNeighbors(n);
 		}
 	}
@@ -104,12 +104,12 @@ Grid.prototype.getCellIndex = function(x,y,wrap){
 					yG = y;
 				// wrap numbers
 				if (x<0)
-					xG = this.width - x;
+					xG = this.width + x;
 				else if (x>=this.width)
 					xG = x - this.width;
 
 				if (y<0)
-					yG = this.height - y;
+					yG = this.height + y;
 				else if (y>=this.height)
 					yG = y - this.height;
 
@@ -124,7 +124,7 @@ Grid.prototype.getCellIndex = function(x,y,wrap){
 			else return undefined;
 		} 
 		else idx = y*this.width+x;
-		return this.cells[idx];
+		return idx;
 	}
 
 }
@@ -148,30 +148,9 @@ Grid.prototype.setCells = function(cellArray){ // by array index
 	}
 	return this.cells;
 }
-Grid.prototype.findNeighbors = function(x,y,wrap){
-	var c = this.getCell(x,y);
-	var n = [];
-	if (typeof(c) === "undefined"){
-		console.log("error trying to find neighbors for undefined Cell at "+x+','+y);
-		return n;
-	}
-	wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
-	// neighbors
-	// -- clockwise starting with top left
-	var tl = this.getCell(	x-1,	y-1,	wrap );
-	var tc = this.getCell(	x,		y-1,	wrap );
-	var tr = this.getCell(	x+1,	y-1,	wrap );
-	var cr = this.getCell(	x+1,	y,		wrap );
-	var br = this.getCell(	x+1,	y+1,	wrap );
-	var bc = this.getCell(	x,		y+1,	wrap );
-	var bl = this.getCell(	x-1,	y+1,	wrap );
-	var cl = this.getCell(	x-1,	y,		wrap );
-	n = [tl,tc,tr,cr,br,bc,bl,cl];
-	return n;
-}
 Grid.prototype.findNeighborIndices = function(x,y,wrap){
-	var c = this.getCell(x,y);
 	var n = [];
+	var c = this.getCell(x,y);
 	if (typeof(c) === "undefined"){
 		console.log("error trying to find neighbor indices for undefined Cell at "+x+','+y);
 		return n;
@@ -179,14 +158,14 @@ Grid.prototype.findNeighborIndices = function(x,y,wrap){
 	wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
 	// neighbors
 	// -- clockwise starting with top left
-	var tl = this.getCell(x-1,y-1,wrap);
-	var tc = this.getCell(x,y-1,wrap);
-	var tr = this.getCell(x+1,y-1,wrap);
-	var cr = this.getCell(x+1,y,wrap);
-	var br = this.getCell(x+1,y+1,wrap);
-	var bc = this.getCell(x,y+1,wrap);
-	var bl = this.getCell(x-1,y+1,wrap);
-	var cl = this.getCell(x-1,y,wrap);
+	var tl = this.getCellIndex(	x-1,	y-1,	wrap);
+	var tc = this.getCellIndex(	x,		y-1,	wrap);
+	var tr = this.getCellIndex(	x+1,	y-1,	wrap);
+	var cr = this.getCellIndex(	x+1,	y,		wrap);
+	var br = this.getCellIndex(	x+1,	y+1,	wrap);
+	var bc = this.getCellIndex(	x,		y+1,	wrap);
+	var bl = this.getCellIndex(	x-1,	y+1,	wrap);
+	var cl = this.getCellIndex(	x-1,	y,		wrap);
 	n = [tl,tc,tr,cr,br,bc,bl,cl];
 	return n;
 }

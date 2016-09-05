@@ -15,6 +15,7 @@ function Conway (width, height, framerate) {
 	this.cells = this.game.cells;
 	this.output = {};
 
+	this.targetFps = isNaN(framerate) ? 30 : framerate;
 	this.updateId = 0;
 	this.util = new Util();
 
@@ -34,10 +35,12 @@ Conway.prototype.setup = function() {
 		c.data = {alive: false, n: 0}; // all cells start dead
 
 		// print cell data and neighbors
-		console.log("cell " + c.name + " n: ");
+		console.log("cell " + c.name + ": ");
+
 		if (Array.isArray(c.neighbors)){
 			for (var n=0; n<c.neighbors.length; n++){
-				console.log('  -'+n+"-- "+c.neighbors[n].x+','+c.neighbors[n].y);
+				var nIdx = c.neighbors[n];
+				console.log(' n'+n+"- "+this.cells[nIdx].name);
 			}
 		} else {
 			console.log("- error! no neighbor array!");
@@ -50,7 +53,11 @@ Conway.prototype.setup = function() {
 Conway.prototype.start = function(){
 
 	var self = this;
-	this.updateId = setInterval( function(){ self.update(); }, 1000/this.targetFps );
+	this.updateId = setInterval( 
+		function(){ 
+			self.update();
+			self.game.tick();
+		}, 1000/this.targetFps );
 	this.game.start();
 
 }
@@ -155,15 +162,19 @@ Conway.prototype.getNumLiveNeighbors = function(neighbors){
 
 			if (i>=8) return undefined; // too many neighbors
 
-			if (neighbors[i] instanceof Cell){
-				var c = neighbors[i];
-				if (typeof(c.data.alive) === "boolean"){
-					n += c.data.alive ? 1 : 0;
-				}
-
-				else return undefined; // no alive/dead data for cell
+			var c;
+			if (neighbors[i] instanceof Cell){ // cell reference
+				c = neighbors[i];
 			}
-			else return undefined; // non-cell in cell array
+			else if (this.util.isNum(neighbors[i]) && neighbors[i] >=0 && neighbors[i] < this.cells.length){ // index
+				c = this.cells[neighbors[i]];
+			}
+			else return undefined; // non-cell or non-index-number in neighbor array
+
+			if (typeof(c.data.alive) === "boolean"){
+				n += c.data.alive ? 1 : 0;
+			}
+			else return undefined; // no alive/dead data for cell
 		}
 
 		return n; // return num live neighbors
