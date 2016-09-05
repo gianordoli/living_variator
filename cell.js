@@ -3,22 +3,24 @@
 // Cell class
 // ----------
 
-var Vec = require('./vec'); // vector class 
-
+var Util = require('./game_util'); // Util class
+var Vec = require('./vec'); // Vector class 
 
 function Cell(x, y, name, neighbors, radius, velocity, data){
 
 	this.x = isNaN(x) ? 0 : x; // position
-	this.x = isNaN(y) ? 0 : y;
+	this.y = isNaN(y) ? 0 : y;
 	this.pos = new Vec(this.x,this.y);
 	this.name = name || this.x+','+this.y;
 	this.radius = isNaN(radius) ? 0 : radius;
 	this.neighbors = [];
+	this.neighborIndices = [];
 	this.addNeighbors(neighbors);
 	this.velocity = new Vec();
 	this.makeVelocity(velocity);
 	this.acceleration = new Vec();
 	this.data = data || {};
+
 }
 
 // ----------
@@ -47,13 +49,35 @@ Cell.prototype.update = function(){
 
 Cell.prototype.addNeighbors = function(neighbors){
 	if (Array.isArray(neighbors)){
-		for (var i=0; i<neighbors.length; i++){
-			if (neighbors[i] instanceof Cell){
-				this.neighbors.push(neighbors[i]);
+		if (neighbors.length > 0){
+			if (isNaN(neighbors[0]) === false){ // indices
+				for (var i=0; i<neighbors.length; i++){
+					if (isNaN(neighbors[i]) === false){
+						this.neighborsIndices.push(neighbors[i]);
+					}
+					else {
+						this.clearNeighbors();
+						console.log("error adding neighbor indices: NaN at neighbors["+i+']');
+					}
+				}
 			}
+			else if (neighbors[0] instanceof Cell){
+				for (var i=0; i<neighbors.length; i++){
+					if (neighbors[i] instanceof Cell){
+						this.neighbors.push(neighbors[i]);
+					}
+					else {
+						this.clearNeighbors();
+						console.log("error adding neighbors: not a Cell at neighbors["+i+']');
+					}
+				}
+			}
+			else console.log("error adding neighbors: neighbors array neither indices nor Cells");
 		}
 	} else if (neighbors instanceof Cell){
-		this.neighbors.push(neighbor);
+		this.neighbors.push(neighbors);
+	} else if (isNaN(neighbors) === false){
+		this.neighborsIndices.push(neighbors);
 	}
 	return this.neighbors;
 }

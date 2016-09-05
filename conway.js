@@ -15,6 +15,9 @@ function Conway (width, height, framerate) {
 	this.cells = this.game.cells;
 	this.output = {};
 
+	this.updateId = 0;
+	this.util = new Util();
+
 }
 
 // in Conway's Game of Life, cells have boolean state: alive or dead
@@ -25,7 +28,6 @@ Conway.prototype.setup = function() {
 
 	this.game.update = this.update; // set game update function
 
-	var good = true;
 	for (var i=0; i<this.cells.length; i++){
 		var c = this.cells[i];
 
@@ -35,15 +37,30 @@ Conway.prototype.setup = function() {
 		console.log("cell " + c.name + " n: ");
 		if (Array.isArray(c.neighbors)){
 			for (var n=0; n<c.neighbors.length; n++){
-				console.log('-'+n+"-- "+c.neighbors[n].x+','+c.neighbors[n].y);
+				console.log('  -'+n+"-- "+c.neighbors[n].x+','+c.neighbors[n].y);
 			}
 		} else {
 			console.log("- error! no neighbor array!");
 			good = false;
 		}
 	}
-	if (good) this.game.start();
 	return this;
+}
+
+Conway.prototype.start = function(){
+
+	var self = this;
+	this.updateId = setInterval( function(){ self.update(); }, 1000/this.targetFps );
+	this.game.start();
+
+}
+
+Conway.prototype.stop = function(){
+	if (this.updateId != 0){
+		clearInterval(this.updateId);
+		this.updateId = 0;
+	}
+	this.game.stop();
 }
 
 Conway.prototype.update = function(){
@@ -56,7 +73,7 @@ Conway.prototype.update = function(){
 	for (var i=0; i<nCells; i++){
 		var c = this.cells[i];
 		var n = this.getNumLiveNeighbors(c.neighbors);
-		if (Util.isNum(n)) { // if actual number
+		if (this.util.isNum(n)) { // if actual number
 
 			// conway rules
 			if (n < 2 || n > 3) c.data.alive = false;

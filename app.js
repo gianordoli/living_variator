@@ -123,16 +123,17 @@ var emitConwayGame = function(data){
             height: data.height,
             cells: data.cells,
             output: data.output,
-            fps: data.fps;
+            fps: data.fps
         });
 	}
 }
 
-var conway = new Conway(1280,720,30); // w, h, fps
+var conway = new Conway(10,10,30); // w, h, fps
 conway.setup();
-var draw = conway.onDraw(function(err,data){ /*emitConwayGame(data);*/ console.log("drawing!"); });
+var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
 if (draw) console.log("set draw callback successfully");
 else console.log("error setting draw callback");
+conway.start();
 
 
 /*---------- DATA CONNECTION  ----------*/

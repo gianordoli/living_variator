@@ -26,8 +26,7 @@ function Game (width,height,framerate) { // constructor
 	this.nFramesThisSec = 0;  // frame ticker
 	this.lastDrawTime = 0; // unix timestamp of last frame for fps calc
 
-	// loop ids
-	this.updateId = 0;
+	// loop id
 	this.fpsId = 0;
 
 }
@@ -44,9 +43,6 @@ Game.prototype.start = function(){
 	// ----------------- LOOP intervals
 	var self = this;
 
-	// update() function runs at target fps
-	this.updateId = setInterval(function(){ self.update(); }, 1000/this.targetFps ); 
-
 	// every second, average the per-frame fps
 	this.fpsId = setInterval(function(){ self.updateFps(); }, 1000);
 
@@ -55,10 +51,7 @@ Game.prototype.start = function(){
 
 // ---------------------- stop
 Game.prototype.stop = function(){
-	if (this.updateId != 0){
-		clearInterval(this.updateId);
-		this.updatedId = 0;
-	}
+
 	if (this.fpsId != 0){
 		clearInterval(this.fpsId);
 		this.fpsId = 0;

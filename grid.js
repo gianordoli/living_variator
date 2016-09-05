@@ -15,7 +15,9 @@ function Grid(width, height, wrap){ // default wrap to true
 	this.numCells = width * height;
 	this.cells = [];
 	this.wrap = (typeof(wrap) === "boolean") ? wrap : true;
+	this.util = new Util();
 	this.initCells();
+
 }
 
 // ----------
@@ -25,16 +27,16 @@ function Grid(width, height, wrap){ // default wrap to true
 Grid.prototype.initCells = function(wrap){
 	this.cells = this.cells.splice(0,this.cells.length); // splice to 0 / clear
 	// init cells with x,y position
-	for (var x=0; x<this.width; x++){
-		for (var y=0; y<this.height; y++){
+	for (var y=0; y<this.height; y++){
+		for (var x=0; x<this.width; x++){
 			this.cells.push(new Cell(x,y));
 		}
 	}
 	// set cell neighbors
 	wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
 
-	for (var x=0; x<this.width; x++){
-		for (var y=0; y<this.height; y++){
+	for (var y=0; y<this.height; y++){
+		for (var x=0; x<this.width; x++){
 
 			var idx = y*this.width+x;
 			var n = this.findNeighbors(x,y,wrap);
@@ -62,28 +64,74 @@ Grid.prototype.getCell = function(x,y,wrap){
 					yG = y;
 				// wrap numbers
 				if (x<0)
+					xG = this.width + x;
+				else if (x>=this.width)
+					xG = x - this.width;
+
+				if (y<0)
+					yG = this.height + y;
+				else if (y>=this.height)
+					yG = y - this.height;
+
+				// find index
+				if (xG>=0 && xG<this.width && yG>=0 && yG<this.height)
+					idx = yG*this.width+xG;
+				else {
+					console.log("tried to get cell for oob x,y: "+x+','+y+", converted to xG,yG: "+xG+','+yG);
+					return undefined;
+				}
+			}
+			else {
+				console.log("tried to get cell for oob x,y: "+x+','+y);
+				return undefined;
+			}
+		} 
+		else idx = y*this.width+x;
+		return this.cells[idx];
+	}
+}
+Grid.prototype.getCellIndex = function(x,y,wrap){
+	if (isNaN(x) || isNaN(y))
+		return undefined;
+
+	else { // x,y
+
+		wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
+		var idx;
+		if (x < 0 || y < 0 || x >= this.width || y >= this.height){
+			if (wrap) {
+				var xG = x,
+					yG = y;
+				// wrap numbers
+				if (x<0)
 					xG = this.width - x;
 				else if (x>=this.width)
 					xG = x - this.width;
+
 				if (y<0)
 					yG = this.height - y;
 				else if (y>=this.height)
 					yG = y - this.height;
+
 				// find index
 				if (xG>=0 && xG<this.width && yG>=0 && yG<this.height)
 					idx = yG*this.width+xG;
-				else return undefined;
+				else {
+					console.log("tried to get cell index for oob x,y: "+x+','+y+", converted to xG,yG: "+xG+','+yG);
+					return undefined;
+				}
 			}
 			else return undefined;
 		} 
 		else idx = y*this.width+x;
 		return this.cells[idx];
 	}
+
 }
 Grid.prototype.setCell = function(x,y,cell){ // by x,y coord on grid
 	if (cell instanceof Cell &&
-		Util.isNum(x) && x >= 0 && x <= this.width &&
-		Util.isNum(y) && y>=0 && y<=this.height)
+		this.util.isNum(x) && x >= 0 && x <= this.width &&
+		this.util.isNum(y) && y>=0 && y<=this.height)
 	{
 		var idx = y*width+x;
 		this.cells[idx] = cell;
@@ -103,7 +151,31 @@ Grid.prototype.setCells = function(cellArray){ // by array index
 Grid.prototype.findNeighbors = function(x,y,wrap){
 	var c = this.getCell(x,y);
 	var n = [];
-	if (typeof(c) === "undefined") return n;
+	if (typeof(c) === "undefined"){
+		console.log("error trying to find neighbors for undefined Cell at "+x+','+y);
+		return n;
+	}
+	wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
+	// neighbors
+	// -- clockwise starting with top left
+	var tl = this.getCell(	x-1,	y-1,	wrap );
+	var tc = this.getCell(	x,		y-1,	wrap );
+	var tr = this.getCell(	x+1,	y-1,	wrap );
+	var cr = this.getCell(	x+1,	y,		wrap );
+	var br = this.getCell(	x+1,	y+1,	wrap );
+	var bc = this.getCell(	x,		y+1,	wrap );
+	var bl = this.getCell(	x-1,	y+1,	wrap );
+	var cl = this.getCell(	x-1,	y,		wrap );
+	n = [tl,tc,tr,cr,br,bc,bl,cl];
+	return n;
+}
+Grid.prototype.findNeighborIndices = function(x,y,wrap){
+	var c = this.getCell(x,y);
+	var n = [];
+	if (typeof(c) === "undefined"){
+		console.log("error trying to find neighbor indices for undefined Cell at "+x+','+y);
+		return n;
+	}
 	wrap = (typeof(wrap) === "boolean") ? wrap : this.wrap;
 	// neighbors
 	// -- clockwise starting with top left
