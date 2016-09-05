@@ -8,13 +8,13 @@ var Grid = require('./grid');
 var Cell = require('./cell'); // cell class
 
 
-function Game (width,height,framerate) { // constructor
+function Game (width,height,framerate,wrap) { // constructor
 
 	// grid
 
 	this.width = isNaN(width) ? 100 : width; // default 100 width
 	this.height = isNaN(height) ? 80 : height; // default 80 height
-	this.grid = new Grid(width,height);
+	this.grid = new Grid(width,height,wrap);
 	this.numCells = this.width*this.height;
 	this.cells = this.grid.cells;
 

@@ -1,7 +1,7 @@
 
-// -------------------------
-// Conway Game of Life class
-// -------------------------
+// ----------------------------------------------
+// Conway Game of Life - simpler, no dependencies
+// ----------------------------------------------
 
 var Util = require('./game_util');
 var Cell = require('./cell'); // cell class

@@ -12,72 +12,55 @@ var simulation = {
 		var mag = Math.sqrt((vx*vx)+(vy*vy));
 		return {x: vx/mag, y: vy/mag };
 	},
-	drawCellData: function(cells, info, ctx){
+	drawCellData: function(data, ctx){
 
-		// bg
-		//ctx.globalCompositeOperation = "source-over"
+		/* 
+		data = {
+		    type: 'conway',
+            width: data.width,
+            height: data.height,
+            cells: data.cells,
+            output: data.output,
+            fps: data.fps
+        }
+        */
 
-		ctx.fillStyle = "rgba(0,0,0,0.7)";
-		ctx.fillRect(0,0,info.width,info.height);
+        var width = ctx.canvas.width;
+        var height = ctx.canvas.height;
+        var cellWidth = width / data.width;
+        var cellHeight = height / data.height;
 
-		//ctx.globalCompositeOperation = "lighten";
+		ctx.fillStyle = "rgba(0,0,0,1.0)";
+		ctx.fillRect(0,0,width,height);
 
 		// draw cells
-		for (var i=0; i<cells.length; i++){
+		for (var i=0; i<data.cells.length; i++){
 
-			var c = cells[i];
+			var c = data.cells[i];
+			if (c.data.alive) {
+				var canX = c.x*cellWidth;
+				var canY = c.y*cellHeight;
 
-			var hue = this.map(c.radius,0,100,240,360,true);
-			var color = { 	
-				h: hue, //0-360 hue... 240 blue, 360 red
-			  	s: 100, //% sat
-			  	l: 60, //% luma (100 == white)
-				a: 0.6  //0-1 alpha
-			};
-			var nColor = { h: hue, s: 20, l: 20, a: 0.2 }; // neighborhood color
+				var hue = this.map(c.data.n,0,9,220,360,true);
+				var color = { 	
+					h: hue, //0-360 hue... 240 blue, 360 red
+				  	s: 100, //% sat
+				  	l: 60, //% luma (100 == white)
+					a: 1.0  //0-1 alpha
+				};
 
-			//draw neighborhood radius
-			ctx.beginPath();
-			ctx.fillStyle = 'hsla('+nColor.h+','+nColor.s+'%,'+nColor.l+'%,'+nColor.a+')'
-			ctx.arc( c.x,c.y, c.neighborhoodRadius,0,Math.PI*2 );
-			ctx.fill();
-
-			// draw cell radius
-			ctx.beginPath();
-			ctx.fillStyle = 'hsla('+color.h+','+color.s+'%,'+color.l+'%,'+color.a+')';
-			ctx.arc( c.x,c.y,c.radius,0,Math.PI*2 );
-			ctx.fill();
-
-			// draw cell velocity line
-			ctx.strokeStyle = 'rgba(255,255,255,0.4)';
-			ctx.beginPath();
-			var nV = this.normalize(c.vx,c.vy);
-			var bx = c.x+nV.x*c.radius,
-				by = c.y+nV.y*c.radius;
-			var ex = bx+c.vx*10,
-				ey = by+c.vy*10;
-			ctx.moveTo(bx,by);
-			ctx.lineTo(ex,ey);
-			ctx.stroke();
-
-			ctx.fillStyle = "white"
-			// radius
-			ctx.fillText('r '+c.radius.toFixed(1), c.x-6, c.y-12);
-			// num neighbors
-			ctx.fillText('n '+c.numNeighbors, c.x-6, c.y);
-			// age
-			ctx.fillText('a '+c.age,c.x-6,c.y+12);
-			// mitosis
-			if (c.mitosis) ctx.fillText('m!', c.x-6, c.y+24);
+				// draw cell
+				ctx.beginPath();
+				ctx.fillStyle = 'hsla('+color.h+','+color.s+'%,'+color.l+'%,'+color.a+')';
+				ctx.fillRect(canX,canY,cellWidth,cellHeight);
+			}
 
 		}
-
-		//ctx.globalCompositeOperation = "source-over";
 
 		// fps draw
 		ctx.fillStyle = "rgba(0,0,0,0.6)";
 		ctx.fillRect(0,0,60,20);
 		ctx.fillStyle = "#fff";
-		ctx.fillText("fps: " + info.fps.toFixed(2), 5,15);
+		ctx.fillText("fps: " + data.fps.toFixed(2), 5,15);
 	}
 }

@@ -159,9 +159,9 @@ app.main = (function(simulation) {
 
 		socket.on('game', function(data){ // raw game data for client side canvas render
 
-			console.log(data);
+			simulation.drawCellData(data, ctx);
 			//simulation.drawCellData(data.buffer, data.info, ctx);
-			
+
 			/*
 			var img = new Image();
 			img.onload = function(){

@@ -128,8 +128,9 @@ var emitConwayGame = function(data){
 	}
 }
 
-var conway = new Conway(10,10,30); // w, h, fps
+var conway = new Conway(10,8,3); // w, h, fps
 conway.setup();
+conway.initSectionPercent(0,0,99,79,0.5);
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
 if (draw) console.log("set draw callback successfully");
 else console.log("error setting draw callback");
