@@ -23,6 +23,7 @@ var simulation = {
            	fps: this.fps.fps
         }
         */
+        
         console.log("cells:");
         console.log(data.cells);
 

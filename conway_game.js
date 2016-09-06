@@ -91,6 +91,10 @@ Conway.prototype.update = function(){
 	this.fps.tick();
 
 	// draw
+
+	// output
+	getOutputs();
+
 	var err = undefined;
 	var data = 
 		{
@@ -112,6 +116,32 @@ Conway.prototype.onDraw = function(callback) {
 		return true;
 	}
 	return false;
+}
+
+Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
+	if (typeof(name) === "string"){
+		this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined };
+	}
+	return this.output;
+}
+
+Conway.prototype.clearOutputs = function(){
+	for (var out in this.output) {
+		if (this.output.hasOwnProperty(out)) { 
+			delete this.output[out]; 
+		} 
+	}
+	return this.output;
+}
+
+Conway.prototype.getOutputs = function(){
+	for (var out in this.output) {
+	  if (this.output.hasOwnProperty(out)) {
+	  	var o = this.output[out];
+	  	o.pct = this.getSectionPercent(o.x1,o.y1,o.x2,o.y2);
+	  }
+	}
+	return this.output;
 }
 
 Conway.prototype.initCell = function(x,y,alive){
