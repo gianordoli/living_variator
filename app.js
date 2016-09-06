@@ -113,7 +113,7 @@ function dataUpdate(){
 
 /*---------- CONWAY GAME ----------*/
 
-var Conway = require('./conway');
+var Conway = require('./conway_game');
 
 var emitConwayGame = function(data){
 	if (connectedUsers > 0){
@@ -128,9 +128,8 @@ var emitConwayGame = function(data){
 	}
 }
 
-var conway = new Conway(10,8,3); // w, h, fps
-conway.setup();
-conway.initSectionPercent(0,0,99,79,0.5);
+var conway = new Conway(100,80,3,false); // w, h, fps, wrap edges?
+conway.initSectionPercent(0,0,99,79,0.5); // half alive
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
 if (draw) console.log("set draw callback successfully");
 else console.log("error setting draw callback");

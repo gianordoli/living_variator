@@ -16,12 +16,11 @@ var simulation = {
 
 		/* 
 		data = {
-		    type: 'conway',
-            width: data.width,
-            height: data.height,
-            cells: data.cells,
-            output: data.output,
-            fps: data.fps
+	        width: this.width,
+           	height: this.height,
+           	cells: this.cells,
+           	output: this.output,
+           	fps: this.fps.fps
         }
         */
 
@@ -37,7 +36,7 @@ var simulation = {
 		for (var i=0; i<data.cells.length; i++){
 
 			var c = data.cells[i];
-			if (c.data.alive) {
+			if (c.alive) {
 				var canX = c.x*cellWidth;
 				var canY = c.y*cellHeight;
 

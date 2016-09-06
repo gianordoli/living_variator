@@ -1,54 +1,26 @@
 
-// ----------------------------------------------
-// Conway Game of Life - simpler, no dependencies
-// ----------------------------------------------
+// ------------------------------------------------
+// Conway Game of Life - simpler, less dependencies
+// ------------------------------------------------
 
-var Util = require('./game_util');
-var Cell = require('./cell'); // cell class
-var Grid = require('./grid'); // game board
-var Game = require('./game'); // game (update + draw)
+var Fps = require('./fps');
 
-function Conway (width, height, framerate) {
+function Conway (width, height, framerate, wrap) {
 
-	this.game = new Game(width, height, framerate, false); // no wrap
-	this.grid = this.game.grid;
-	this.cells = this.game.cells;
+	this.width = isNaN(width) ? 100 : width;
+	this.height = isNaN(height) ? 80 : height;
+	this.targetFps = isNaN(framerate) ? 30 : framerate;
+	this.wrap = (typeof(wrap) === boolean) ? wrap : false;
+	this.cells = [];
 	this.output = {};
 
-	this.targetFps = isNaN(framerate) ? 30 : framerate;
 	this.updateId = 0;
-	this.util = new Util();
-
+	this.fps = new Fps();
+	this.setup();
 }
 
 // in Conway's Game of Life, cells have boolean state: alive or dead
 // every update, cell's state is determined by states of 8 neighbors on the grid
-
-
-Conway.prototype.setup = function() {
-
-	this.game.update = this.update; // set game update function
-
-	for (var i=0; i<this.cells.length; i++){
-		var c = this.cells[i];
-
-		c.data = {alive: false, n: 0}; // all cells start dead
-
-		// print cell data and neighbors
-		console.log("cell " + c.name + ": ");
-
-		if (Array.isArray(c.neighbors)){
-			for (var n=0; n<c.neighbors.length; n++){
-				var nIdx = c.neighbors[n];
-				console.log(' n'+n+"- "+this.cells[nIdx].name);
-			}
-		} else {
-			console.log("- error! no neighbor array!");
-			good = false;
-		}
-	}
-	return this;
-}
 
 Conway.prototype.start = function(){
 
@@ -56,10 +28,8 @@ Conway.prototype.start = function(){
 	this.updateId = setInterval( 
 		function(){ 
 			self.update();
-			self.game.tick();
 		}, 1000/this.targetFps );
-	this.game.start();
-
+	this.fps.start();
 }
 
 Conway.prototype.stop = function(){
@@ -67,42 +37,67 @@ Conway.prototype.stop = function(){
 		clearInterval(this.updateId);
 		this.updateId = 0;
 	}
-	this.game.stop();
+	this.fps.stop();
+}
+
+Conway.prototype.setup = function() {
+
+	for (var y=0; y<this.height; y++){
+		for (var x=0; x<this.width; x++){
+
+			var cell = 
+			{
+				alive: false, // all cells start dead
+				x: x, // x pos
+				y: y,  // y pos
+				n: 0 // num alive neighbors
+			}; 
+			this.cells.push(cell); // top left to bottom right
+
+		}
+	}
+	return this;
 }
 
 Conway.prototype.update = function(){
 
-	var w = this.game.width;
-	var h = this.game.height;
-	var nCells = this.cells.length;
-	var err = {};
+	var err = {}; // for draw callback
 
-	for (var i=0; i<nCells; i++){
+	for (var i=0; i<this.cells.length; i++){
+
 		var c = this.cells[i];
-		var n = this.calcNumLiveNeighbors(i);
-		if (this.util.isNum(n)) { // if actual number
 
-			// conway rules
-			if (n < 2 || n > 3) c.data.alive = false;
-			else if (n === 3) c.data.alive = true;
-			// if 2, no change
-			c.data.n = n; // save num alive neighbors
-		}
-		else {
-			console.log("error! cell "+i+"'s neighbor data undefined");
+		// ------------
+		// conway rules
+		// ------------
 
+		if (c.n < 2 || c.n > 3) // die if lonely or overcrowded
+			c.alive = false;
+
+		else if (c.n === 3) // spawn if exactly 3 neighbors
+			c.alive = true;
+
+		// if c.n === 2, no change
+
+		else if (c.n != 2){
+			console.log("error: unknown neighbor data for cell index "+i+", neighbors: "+c.n);
 		}
 	}
+
+	this.getAllNumNeighbors(); // recalc num neighbors
+
+	// tick fps
+	this.fps.tick();
 
 	// draw
 	var err = undefined;
 	var data = 
 		{
-	        width: this.game.width,
-           	height: this.game.height,
+	        width: this.width,
+           	height: this.height,
            	cells: this.cells,
            	output: this.output,
-           	fps: this.game.fps
+           	fps: this.fps.fps
         }
 	this.draw(err,data);
 }
@@ -119,66 +114,110 @@ Conway.prototype.onDraw = function(callback) {
 }
 
 Conway.prototype.initCell = function(x,y,alive){
-	var c = this.grid.getCell(x,y);
-	if (c instanceof Cell){
-		c.data.alive = alive;
+	var c = this.getCell(x,y);
+	if (typeof(c) != "undefined"){
+		c.alive = alive;
 		return c;
 	}
 	else return undefined;
 }
 
 Conway.prototype.initSectionPercent = function(x1,y1,x2,y2,pctAlive){ // init x1-x2,y1-y2 box of cells, inclusive
-	for (var x=x1; x<=x2 && x<this.game.width; x++){
-		for (var y=y1; y<=y2 && y<this.game.height; y++){
+	var numInit = 0;
+	for (var x=x1; x<=x2 && x<this.width; x++){
+		for (var y=y1; y<=y2 && y<this.height; y++){
 			var a = (Math.random() <= pctAlive);
-			this.initCell(x,y,a);
-			var log = "cell at "+x+','+y+": ";
-			log += a ? "alive" : "dead";
-			console.log(log);
+			var c = this.initCell(x,y,a);
+			if (typeof(c) != "undefined"){
+				var log = "cell at "+x+','+y+": ";
+				log += a ? "alive" : "dead";
+				console.log(log);
+				numInit++;
+			}
+			else {
+				console.log("error initializing cell at "+x+','+y+" to "+a);
+			}
 		}
 	}
+	if (numInit > 0) this.getAllNumNeighbors();
+	return this;
 }
 
 Conway.prototype.getSectionPercent = function(x1,y1,x2,y2){
-	var nA = 0;
-	var nC = 0;
+	var numAlive = 0;
+	var numCells = 0;
 	for (var x=x1; x<=x2 && x<this.game.width; x++){
 		for (var y=y1; y<=y2 && y<this.game.height; y++){
-			var c = this.grid.getCell(x,y);
-			if (c instanceof Cell){
-				if (typeof(c.data.alive) === "boolean"){
-					nA += c.data.alive ? 1 : 0;
-					nC++;
+			var c = this.getCell(x,y);
+			if (typeof(c) != "undefined"){
+				if (typeof(c.alive) === "boolean"){
+					numAlive += c.alive ? 1 : 0;
+					numCells++;
 				}
 			}
 		}
 	}
-	if (nC > 0) return nA/nC;
-	return 0;
+	if (numCells > 0) return numAlive/numCells;
+	else return 0;
 }
-Conway.prototype.calcNumLiveNeighbors = function(index){
 
-	var n = 0; // num of alive neighbors
+Conway.prototype.getCell = function(x,y,wrap){
+	if (isNaN(x) || isNaN(y))
+		return undefined;
 
-	if (this.util.isNum(index)){
+	else { // x,y
 
-		var c = this.cells[index];
-		var neighbors = c.neighbors;
+		wrap = (typeof(wrap) === "boolean") ? wrap : false; // wrap grid edges?
 
-		for (var i=0; i<neighbors.length; i++){
+		var idx;
+		if (x < 0 || y < 0 || x >= this.width || y >= this.height){
+			if (wrap) {
+				var xG = x,
+					yG = y;
+				// wrap numbers
+				if (x<0)
+					xG = this.width + x;
+				else if (x>=this.width)
+					xG = x - this.width;
 
-			if (i>=8) return undefined; // too many neighbors			
+				if (y<0)
+					yG = this.height + y;
+				else if (y>=this.height)
+					yG = y - this.height;
 
-			var nC = this.cells[neighbors[i]];
-			if (typeof(nC.data.alive) === "boolean"){
-				n += nC.data.alive ? 1 : 0;
+				// find index
+				if (xG>=0 && xG<this.width && yG>=0 && yG<this.height)
+					idx = yG*this.width+xG;
+				else {
+					console.log("tried to get cell for oob x,y: "+x+','+y+", converted to xG,yG: "+xG+','+yG);
+					return undefined;
+				}
 			}
-			else return undefined; // no alive/dead data for cell
-		}
-
-		return n; // return num live neighbors
+			else return undefined;
+		} 
+		else idx = y*this.width+x;
+		return this.cells[idx];
 	}
-	else return undefined; // no cell array
+}
+
+Conway.prototype.getAllNumNeighbors = function(){
+	for (var i=0; i<this.cells.length; i++){
+		var n = 0;
+		var c = this.cells[i];
+
+		// calc alive neighbors
+		for (y=-1; y<=1; y++){
+			for (x=-1; x<=1; x++){
+				var nX = c.x+x;
+				var nY = c.y+y;
+				var nC = this.getCell(nX,nY,this.wrap);
+				if (typeof(nC) != "undefined"){
+					n += nC.alive ? 1 : 0;
+				}
+			}
+		}
+		c.n = n;
+	}
 }
 
 module.exports = Conway;
