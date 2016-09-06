@@ -58,7 +58,7 @@ Fps.prototype.tick = function(){ // calc per frame fps
 
 // ---------------------- get fps -- call every second
 
-Game.prototype.updateFps = function(){ // util to update fps every second (simply counts frames)
+Fps.prototype.updateFps = function(){ // util to update fps every second (simply counts frames)
 	this.fps = this.sumFps / this.nFramesThisSec;
 	this.sumFps = 0;
 	this.nFramesThisSec = 0;
