@@ -23,6 +23,8 @@ var simulation = {
            	fps: this.fps.fps
         }
         */
+        console.log("cells:");
+        console.log(data.cells);
 
         var width = ctx.canvas.width;
         var height = ctx.canvas.height;
@@ -40,7 +42,7 @@ var simulation = {
 				var canX = c.x*cellWidth;
 				var canY = c.y*cellHeight;
 
-				var hue = this.map(c.data.n,0,9,220,360,true);
+				var hue = this.map(c.n,0,9,220,360,true);
 				var color = { 	
 					h: hue, //0-360 hue... 240 blue, 360 red
 				  	s: 100, //% sat

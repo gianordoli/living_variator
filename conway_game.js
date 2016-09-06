@@ -10,7 +10,7 @@ function Conway (width, height, framerate, wrap) {
 	this.width = isNaN(width) ? 100 : width;
 	this.height = isNaN(height) ? 80 : height;
 	this.targetFps = isNaN(framerate) ? 30 : framerate;
-	this.wrap = (typeof(wrap) === boolean) ? wrap : false;
+	this.wrap = (typeof(wrap) === "boolean") ? wrap : false;
 	this.cells = [];
 	this.output = {};
 
@@ -47,6 +47,7 @@ Conway.prototype.setup = function() {
 
 			var cell = 
 			{
+				idx: y*this.width+x,
 				alive: false, // all cells start dead
 				x: x, // x pos
 				y: y,  // y pos
@@ -211,7 +212,7 @@ Conway.prototype.getAllNumNeighbors = function(){
 				var nX = c.x+x;
 				var nY = c.y+y;
 				var nC = this.getCell(nX,nY,this.wrap);
-				if (typeof(nC) != "undefined"){
+				if (typeof(nC) != "undefined" && c!=nC){
 					n += nC.alive ? 1 : 0;
 				}
 			}

@@ -64,3 +64,5 @@ Fps.prototype.updateFps = function(){ // util to update fps every second (simply
 	this.nFramesThisSec = 0;
 	console.log("fps: "+this.fps);
 }
+
+module.exports = Fps;

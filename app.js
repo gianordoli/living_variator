@@ -128,7 +128,7 @@ var emitConwayGame = function(data){
 	}
 }
 
-var conway = new Conway(100,80,3,false); // w, h, fps, wrap edges?
+var conway = new Conway(100,80,120,true); // w, h, fps, wrap edges?
 conway.initSectionPercent(0,0,99,79,0.5); // half alive
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
 if (draw) console.log("set draw callback successfully");
