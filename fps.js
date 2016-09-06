@@ -22,7 +22,7 @@ function Fps(){
 
 // ---------------------- start/stop timer
 
-Game.prototype.start = function(){
+Fps.prototype.start = function(){
 	var self = this;
 	this.fpsId = setInterval( 
 		function(){ 
@@ -31,7 +31,7 @@ Game.prototype.start = function(){
 	this.lastDrawTime = Date.now();
 }
 
-Game.prototype.stop = function(){
+Fps.prototype.stop = function(){
 	if (this.fpsId != 0){
 		clearInterval(this.fpsId);
 	}
