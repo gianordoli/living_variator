@@ -12,7 +12,9 @@ function Conway (width, height, framerate, wrap) {
 	this.targetFps = isNaN(framerate) ? 30 : framerate;
 	this.wrap = (typeof(wrap) === "boolean") ? wrap : false;
 	this.cells = [];
+	this.input = {};
 	this.output = {};
+	this.nAlive = 0;
 
 	this.updateId = 0;
 	this.fps = new Fps();
@@ -21,6 +23,8 @@ function Conway (width, height, framerate, wrap) {
 
 // in Conway's Game of Life, cells have boolean state: alive or dead
 // every update, cell's state is determined by states of 8 neighbors on the grid
+
+// ------------------------------------------- START/STOP
 
 Conway.prototype.start = function(){
 
@@ -39,6 +43,9 @@ Conway.prototype.stop = function(){
 	}
 	this.fps.stop();
 }
+
+// ------------------------------------------- SETUP (called by constructor)
+												// - inits grid of "dead" cells
 
 Conway.prototype.setup = function() {
 
@@ -60,9 +67,12 @@ Conway.prototype.setup = function() {
 	return this;
 }
 
+// ------------------------------------------- UPDATE
+
 Conway.prototype.update = function(){
 
-	var err = {}; // for draw callback
+	var err = undefined;
+	console.log("begin update - num alive cells: "+this.nAlive);
 
 	for (var i=0; i<this.cells.length; i++){
 
@@ -85,31 +95,39 @@ Conway.prototype.update = function(){
 		}
 	}
 
-	this.getAllNumNeighbors(); // recalc num neighbors
+	// ----------------- recalc num neighbors for each cell in grid
 
-	// tick fps
+	this.getAllNumNeighbors();
+
+	console.log("end update - num alive cells: "+this.nAlive);
+
+	// ----------------- tick fps
 	this.fps.tick();
 
-	// draw
+	// ----------------- calc output streams
+	this.getOutputs();
 
-	// output
-	getOutputs();
+	// ----------------- "draw" callback
 
-	var err = undefined;
 	var data = 
 		{
 	        width: this.width,
            	height: this.height,
            	cells: this.cells,
+           	input: this.input,
            	output: this.output,
            	fps: this.fps.fps
         }
 	this.draw(err,data);
 }
 
+// ------------------------------------------- "DRAW" CALLBACK ----------//
+/* (passes data object: width, height, cells array, output streams, fps) */
+
+
 Conway.prototype.draw = function(err, data){ }
 
-Conway.prototype.onDraw = function(callback) {
+Conway.prototype.onDraw = function(callback) { // set draw callback function
 	if (typeof(callback) === "function"){
 
 		this.draw = callback;
@@ -118,9 +136,57 @@ Conway.prototype.onDraw = function(callback) {
 	return false;
 }
 
+// ------------------------------------------- INPUT / OUTPUT
+
+
+Conway.prototype.addInput = function(x1,y1,x2,y2,name){
+	if (typeof(name) === "string"){
+		if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+			console.log("error adding input to NaN region x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
+		}
+		else {
+			this.input[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: 0 };
+			console.log("added input section "+name+" - x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
+		}
+	}
+	return this.input;
+}
+
+Conway.prototype.setInput = function(name, pct){
+	if (typeof(name) === "string" && this.input.hasOwnProperty(name)) {
+		if (isNaN(pct) || pct > 1.0 || pct < 0.0) { // pct must be between 0 and 1
+			console.log("error setting input "+name+" pct: "+pct+" is invalid (must be 0-1)");
+		}
+		else {
+			var i = this.input[name];
+			i.pct = pct;
+			this.initSectionPercent(i.x1,i.y1,i.x2,i.y2,i.pct); // init input section
+		}
+	}
+	else {
+		console.log("error setting input pct: "+name+" is invalid input stream");
+	}
+	return this.input;
+}
+
+Conway.prototype.clearInputs = function(){
+	for (var inp in this.input) {
+		if (this.input.hasOwnProperty(inp)) { 
+			delete this.input[inp]; 
+		} 
+	}
+	return this.input;
+}
+
 Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 	if (typeof(name) === "string"){
-		this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined };
+		if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+			console.log("error adding output to NaN region x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
+		}
+		else {
+			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined };
+			console.log("added output section "+name+" - x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
+		}
 	}
 	return this.output;
 }
@@ -144,7 +210,9 @@ Conway.prototype.getOutputs = function(){
 	return this.output;
 }
 
-Conway.prototype.initCell = function(x,y,alive){
+// ------------------------------------------- SETTERS / GETTERS
+
+Conway.prototype.initCell = function(x,y,alive){ // init single cell
 	var c = this.getCell(x,y);
 	if (typeof(c) != "undefined"){
 		c.alive = alive;
@@ -154,15 +222,17 @@ Conway.prototype.initCell = function(x,y,alive){
 }
 
 Conway.prototype.initSectionPercent = function(x1,y1,x2,y2,pctAlive){ // init x1-x2,y1-y2 box of cells, inclusive
-	var numInit = 0;
-	for (var x=x1; x<=x2 && x<this.width; x++){
-		for (var y=y1; y<=y2 && y<this.height; y++){
-			var a = (Math.random() <= pctAlive);
+	var numAlive = 0, numInit = 0;
+	if (isNaN(pctAlive) || pctAlive <=0 || pctAlive > 1){
+		console.log("error init section "+x1+","+y1+":"+x2+","+y2+" - pctAlive out of range 0-1");
+		return this;
+	}
+	for (var y=y1; y<=y2 && y<this.height; y++){
+		for (var x=x1; x<=x2 && x<this.width; x++){
+			var a = (Math.random() < pctAlive) ? true : false;
 			var c = this.initCell(x,y,a);
 			if (typeof(c) != "undefined"){
-				var log = "cell at "+x+','+y+": ";
-				log += a ? "alive" : "dead";
-				console.log(log);
+				if (a) numAlive++;
 				numInit++;
 			}
 			else {
@@ -170,15 +240,23 @@ Conway.prototype.initSectionPercent = function(x1,y1,x2,y2,pctAlive){ // init x1
 			}
 		}
 	}
-	if (numInit > 0) this.getAllNumNeighbors();
+	if (numInit > 0) {
+		this.getAllNumNeighbors();
+		var pct = numAlive/numInit;
+		console.log("inited section "+x1+","+y1+":"+x2+","+y2+" - alive/total: "+numAlive+"/"+numInit+" = "+pct.toFixed(4));
+
+		/* testing */
+		var pctTrue = this.getSectionPercent(x1,y1,x2,y2);
+		console.log("tested: section "+x1+","+y1+":"+x2+","+y2+" - alive/total: "+pctTrue.toFixed(4));
+	}
 	return this;
 }
 
-Conway.prototype.getSectionPercent = function(x1,y1,x2,y2){
+Conway.prototype.getSectionPercent = function(x1,y1,x2,y2){ // calc pct alive in area
 	var numAlive = 0;
 	var numCells = 0;
-	for (var x=x1; x<=x2 && x<this.game.width; x++){
-		for (var y=y1; y<=y2 && y<this.game.height; y++){
+	for (var x=x1; x<=x2 && x<this.width; x++){
+		for (var y=y1; y<=y2 && y<this.height; y++){
 			var c = this.getCell(x,y);
 			if (typeof(c) != "undefined"){
 				if (typeof(c.alive) === "boolean"){
@@ -192,7 +270,7 @@ Conway.prototype.getSectionPercent = function(x1,y1,x2,y2){
 	else return 0;
 }
 
-Conway.prototype.getCell = function(x,y,wrap){
+Conway.prototype.getCell = function(x,y,wrap){ // retrieve cell by x,y location
 	if (isNaN(x) || isNaN(y))
 		return undefined;
 
@@ -231,10 +309,12 @@ Conway.prototype.getCell = function(x,y,wrap){
 	}
 }
 
-Conway.prototype.getAllNumNeighbors = function(){
+Conway.prototype.getAllNumNeighbors = function(){ // calc num neighbors for each cell in grid
+	var nAlive = 0;
 	for (var i=0; i<this.cells.length; i++){
 		var n = 0;
 		var c = this.cells[i];
+		if (c.alive) nAlive++;
 
 		// calc alive neighbors
 		for (y=-1; y<=1; y++){
@@ -249,6 +329,7 @@ Conway.prototype.getAllNumNeighbors = function(){
 		}
 		c.n = n;
 	}
+	this.nAlive = nAlive;
 }
 
 module.exports = Conway;

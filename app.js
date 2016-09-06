@@ -115,25 +115,67 @@ function dataUpdate(){
 
 var Conway = require('./conway_game');
 
-var emitConwayGame = function(data){
+var emitConwayGame = function(data){ // send conway data to client
 	if (connectedUsers > 0){
         io.sockets.emit('game', {
             type: 'conway',
             width: data.width,
             height: data.height,
             cells: data.cells,
+            input: data.input,
             output: data.output,
             fps: data.fps
         });
 	}
 }
 
-var conway = new Conway(100,80,120,true); // w, h, fps, wrap edges?
-conway.initSectionPercent(0,0,99,79,0.5); // half alive
+var conway = new Conway(100,80,15,true); // w, h, fps, wrap edges?
+// conway.initSectionPercent(0,0,99,79,0.5); // half alive
+
+var initInputSections = function(){ // init input sections (8 vertical divisions)
+    var inpH = Math.floor(conway.height/8);
+    var inpW = conway.width;
+    var x1 = 0, y1 = 0, x2 = inpW-1, y2 = inpH-1;
+    for (var i=0; i<8; i++){
+        var name = i.toString();
+        conway.addInput(x1,y1,x2,y2,name);
+        y1+=inpH;
+        y2+=inpH;
+    }
+}
+var initOutputSections = function(){ // init output sections (10 horizontal divisions)
+    var outW = Math.floor(conway.width/10);
+    var outH = conway.height;
+    var x1 = 0, y1 = 0, x2 = outW-1, y2 = outH-1;
+    for (var i=0; i<10; i++){
+        var name = i.toString();
+        conway.addOutput(x1,y1,x2,y2,name);
+        x1+=outW;
+        x2+=outW;
+    }
+}
+initInputSections();
+initOutputSections();
+
+// setup draw callback
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
-if (draw) console.log("set draw callback successfully");
-else console.log("error setting draw callback");
+    if (draw) console.log("set draw callback successfully");
+    else console.log("error setting draw callback");
+
+// setup dummy inputs
+setInterval(function(){
+    conway.stop();
+    for (var i=0; i<8; i++){
+        var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+        conway.setInput(i.toString(), pct);
+        console.log("set conway input "+i+" to pct: "+pct);
+    }
+    conway.start();
+}, 15000); // every 15 sec, 8 new inputs ranged 0-1
+
+// start game
 conway.start();
+
 
 
 /*---------- DATA CONNECTION  ----------*/
