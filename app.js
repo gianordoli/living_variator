@@ -111,31 +111,72 @@ function dataUpdate(){
 }
 
 
-/*---------- SIMULATION  ----------*/
+/*---------- CONWAY GAME ----------*/
 
-var Simulation = require('./simulation');
+var Conway = require('./conway_game');
 
-var emitCanvas = function(filename){
+var emitConwayGame = function(data){ // send conway data to client
 	if (connectedUsers > 0){
-		//io.sockets.emit('simulation', { type: 'URL', buffer: canvas.toDataURL()}); // send dataURL
-		//io.sockets.emit('simulation', { type: 'URL': buffer: filename }); // send filename of saved png
-		// simulation.canvas.toBuffer(function(err,buf){
-		// 	if (err) throw err;
-		//  	//io.sockets.emit('simulation', { type: 'png64', buffer: buf.toString('base64')}); // send img buffer as base64
-		//  	io.sockets.emit('simulation', { type: 'rawbuf', buffer: buf}); // send raw img buffer (to encode base64 on client)
-		// });
-        io.sockets.emit('simulation', {
-            type: 'cellData',
-            buffer: simulation.cells, 
-            info: { width : simulation.width, height: simulation.height, fps: simulation.fps } 
+        io.sockets.emit('game', {
+            type: 'conway',
+            width: data.width,
+            height: data.height,
+            cells: data.cells,
+            input: data.input,
+            output: data.output,
+            fps: data.fps
         });
 	}
 }
 
-// UNCOMMENT LATER!!!
-var simulation = new Simulation(1280,720,50,30,false); // width, height, fps, drawOnServer?
-//setInterval(emitCanvas, 1000/20); // draw to client at specific fps
-simulation.onDraw = emitCanvas;
+var conway = new Conway(100,80,15,true); // w, h, fps, wrap edges?
+// conway.initSectionPercent(0,0,99,79,0.5); // half alive
+
+var initInputSections = function(){ // init input sections (8 vertical divisions)
+    var inpH = Math.floor(conway.height/8);
+    var inpW = conway.width;
+    var x1 = 0, y1 = 0, x2 = inpW-1, y2 = inpH-1;
+    for (var i=0; i<8; i++){
+        var name = i.toString();
+        conway.addInput(x1,y1,x2,y2,name);
+        y1+=inpH;
+        y2+=inpH;
+    }
+}
+var initOutputSections = function(){ // init output sections (10 horizontal divisions)
+    var outW = Math.floor(conway.width/10);
+    var outH = conway.height;
+    var x1 = 0, y1 = 0, x2 = outW-1, y2 = outH-1;
+    for (var i=0; i<10; i++){
+        var name = i.toString();
+        conway.addOutput(x1,y1,x2,y2,name);
+        x1+=outW;
+        x2+=outW;
+    }
+}
+initInputSections();
+initOutputSections();
+
+// setup draw callback
+var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
+    if (draw) console.log("set draw callback successfully");
+    else console.log("error setting draw callback");
+
+// setup dummy inputs
+setInterval(function(){
+    conway.stop();
+    for (var i=0; i<8; i++){
+        var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+        conway.setInput(i.toString(), pct);
+        console.log("set conway input "+i+" to pct: "+pct);
+    }
+    conway.start();
+}, 15000); // every 15 sec, 8 new inputs ranged 0-1
+
+// start game
+conway.start();
+
+
 
 /*---------- DATA CONNECTION  ----------*/
 var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];

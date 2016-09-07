@@ -157,7 +157,12 @@ app.main = (function(simulation) {
 			drawUI(data.inputs, data.controls, data.connections);
 		});		
 
-		socket.on('simulation', function(data){
+		socket.on('game', function(data){ // raw game data for client side canvas render
+
+			simulation.drawCellData(data, ctx);
+			//simulation.drawCellData(data.buffer, data.info, ctx);
+
+			/*
 			var img = new Image();
 			img.onload = function(){
 				ctx.drawImage(img,0,0);
@@ -183,6 +188,7 @@ app.main = (function(simulation) {
 				console.log(data);
 				simulation.drawCellData(data.buffer, data.info, ctx);
 			}
+			*/
 
 		});
 
