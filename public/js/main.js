@@ -136,8 +136,52 @@ app.main = (function(simulation) {
 		}
 	}
 
-	function updateViz(){
-		
+	function updateViz(data){
+		console.log('Called updateViz');
+		console.log(data);
+		for(var prop in data){
+			var dropdown = $('option[value="'+prop+'"][selected="selected"]');
+
+			if(dropdown.length > 0){
+				var control = $(dropdown).parent().attr('id');
+				var color;
+				if(control.indexOf('water') > -1){
+					color = {
+						red: 0,
+						green: 100,
+						blue: 255
+					};
+				}else if(control.indexOf('light') > -1){
+					color = {
+						red: 255,
+						green: 180,
+						blue: 0
+					};					
+				}else if(control.indexOf('heating') > -1){
+					color = {
+						red: 255,
+						green: 0,
+						blue: 0
+					};					
+				}else if(control.indexOf('AC') > -1){
+					color = {
+						red: 0,
+						green: 0,
+						blue: 0
+					};
+				}
+				var container = $(dropdown)
+					.parent()
+					.parent()
+					.parent()
+					.css({
+						'background-color': 'rgba('+color['red']+','+
+													color['green']+','+
+													color['blue']+','+
+													(data[prop]['pct']*5)+')'
+					});
+			}
+		}	
 	}
 
 
