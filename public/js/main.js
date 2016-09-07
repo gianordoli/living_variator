@@ -16,26 +16,24 @@ app.main = (function(simulation) {
 		console.log('Called appendData');
 		console.log(data);
 		for(var prop in data){
-			if(prop !== 'Date Time'){
-				var dropdown = $('option[value="'+prop+'"][selected="selected"]');
+			var dropdown = $('option[value="'+prop+'"][selected="selected"]');
 
-				if(dropdown.length > 0){
-					// console.log(dropdown);
-					$(dropdown)
-						.parent()
-						.parent()
-						.find('.data-input')
-						.prepend('<li>'+data[prop].toFixed(2)+'</li>')
-						;
-					// console.log(dataLog);
-				}
+			if(dropdown.length > 0){
+				// console.log(dropdown);
+				$(dropdown)
+					.parent()
+					.parent()
+					.find('.data-output')
+					.prepend('<li>'+data[prop]['pct']+'</li>')
+					;
+				// console.log(dataLog);
 			}
 		}
 	};
 
-	function drawUI(inputs, controls, connections){
+	function drawUI(outputs, controls, connections){
 		console.log('Called drawUI');
-		console.log(inputs);
+		console.log(outputs);
 		console.log(controls);
 		console.log(connections);
 
@@ -56,19 +54,19 @@ app.main = (function(simulation) {
 
 				var controlParent = $('<div class="control-parent"></div>');				
 
-				// input
-				var divInput = $('<div class="input"></div>');
+				// output
+				var divOutput = $('<div class="output"></div>');
 
-				var dropdown = $('<select id="'+controls[i]['label']+'"></select>');
-				for(var j = 0; j < inputs.length; j++){
+				var dropdown = $('<select id="'+controls[i]+'"></select>');
+				for(var j = 0; j < outputs.length; j++){
 					$(dropdown)
-						.append('<option value="'+inputs[j]+'">'+inputs[j]+'</option>')
+						.append('<option value="'+outputs[j]+'">'+outputs[j]+'</option>')
 						;
 				}
-				$(divInput)
-					.append('<h6>INPUT</h6>')
+				$(divOutput)
+					.append('<h6>OUTPUT</h6>')
 					.append(dropdown)
-					.append('<ul class="data-input"></ul>')
+					.append('<ul class="data-output"></ul>')
 					;
 
 				// control
@@ -76,13 +74,13 @@ app.main = (function(simulation) {
 
 				$(divControl)
 					.append('<h6>CONTROL</h6>')
-					.append('<p>'+controls[i]['label']+'</p>')
+					.append('<p>'+controls[i]+'</p>')
 					.append('<ul class="data-control"></ul>')
 					;
 					
 
 				$(controlParent)
-					.append(divInput)
+					.append(divOutput)
 					.append(divControl)
 					.appendTo(ui)
 					;
@@ -93,13 +91,13 @@ app.main = (function(simulation) {
 				.off('click')
 				.on('click', function(){
 
-					$('.data-control, .data-input').empty();
+					$('.data-control, .data-output').empty();
 
 					var updatedConnections = [];
 					var selects = $('select');
 					for(var i = 0; i < selects.length; i++){
 						updatedConnections.push({
-							input: $(selects[i]).val(),
+							output: $(selects[i]).val(),
 							control: $(selects[i]).attr('id') 
 						});						
 					}
@@ -115,12 +113,12 @@ app.main = (function(simulation) {
 		function update(){
 	        // Updating dropdowns based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
-	        	var dropdown = $('#'+connections[i]['control']['label'])
+	        	var dropdown = $('#'+connections[i]['control'])
 	        		.change(function(){
 	        			handleChange(this);
 	        		})
 	        		;
-	        	$(dropdown).val(connections[i]['input']);
+	        	$(dropdown).val(connections[i]['output']);
 	        	handleChange(dropdown);
 	        }
 	        function handleChange(obj){
@@ -154,12 +152,13 @@ app.main = (function(simulation) {
 
 		socket.on('draw-connections', function(data){
 			console.log(data);
-			drawUI(data.inputs, data.controls, data.connections);
+			drawUI(data.outputs, data.controls, data.connections);
 		});		
 
 		socket.on('game', function(data){ // raw game data for client side canvas render
 
 			simulation.drawCellData(data, ctx);
+			appendData(data['output']);
 			//simulation.drawCellData(data.buffer, data.info, ctx);
 
 			/*

@@ -50,12 +50,12 @@ io.on('connection', function(socket) {
 	connectedUsers ++;
 	console.log('Connected users: ' + connectedUsers);
 
-	socket.emit('welcome', { msg: 'Welcome! your id is ' + socket.id });
-	
+	socket.emit('welcome', { msg: 'Welcome! your id is ' + socket.id });	
+
     socket.emit('draw-connections', {
-        inputs: inputs,
-        controls: controls,
-        connections: connections
+        outputs: Object.keys(conway.getOutputs()),
+        controls: dataConnector.getControls(),
+        connections: dataConnector.getConnections()
     });
 
 
@@ -91,23 +91,25 @@ setInterval(dataUpdate, 1000);
 var currData = [];
 var n = 0;
 function dataUpdate(){
-    var column = inputs[0];
-    // console.log(data[n]);
-    var newObj = {};
-    // Let's constrain our inputs to the 'A' columns
-    for(var prop in data[n]){
-        if(inputs.indexOf(prop) > -1){
-            newObj[prop] = data[n][prop];
-        }
-    }
-    newObj['Date Time'] = data[n]['Date Time'];
-    // console.log(newObj);
-    io.sockets.emit('data-update', newObj);
-    if(n < data.length - 1){
-        n++;
-    }else{
-        n = 0;
-    }
+    // NEED TO CONNECT THIS TO TYLER'S SIM
+
+    // var column = inputs[0];
+    // // console.log(data[n]);
+    // var newObj = {};
+    // // Let's constrain our inputs to the 'A' columns
+    // for(var prop in data[n]){
+    //     if(inputs.indexOf(prop) > -1){
+    //         newObj[prop] = data[n][prop];
+    //     }
+    // }
+    // newObj['Date Time'] = data[n]['Date Time'];
+    // // console.log(newObj);
+    // io.sockets.emit('data-update', newObj);
+    // if(n < data.length - 1){
+    //     n++;
+    // }else{
+    //     n = 0;
+    // }
 }
 
 
@@ -127,7 +129,7 @@ var emitConwayGame = function(data){ // send conway data to client
             fps: data.fps
         });
 	}
-}
+};
 
 var conway = new Conway(100,80,15,true); // w, h, fps, wrap edges?
 // conway.initSectionPercent(0,0,99,79,0.5); // half alive
@@ -142,7 +144,7 @@ var initInputSections = function(){ // init input sections (8 vertical divisions
         y1+=inpH;
         y2+=inpH;
     }
-}
+};
 var initOutputSections = function(){ // init output sections (10 horizontal divisions)
     var outW = Math.floor(conway.width/10);
     var outH = conway.height;
@@ -153,9 +155,10 @@ var initOutputSections = function(){ // init output sections (10 horizontal divi
         x1+=outW;
         x2+=outW;
     }
-}
+};
 initInputSections();
 initOutputSections();
+var dataConnector = new DataConnector();
 
 // setup draw callback
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
@@ -179,31 +182,41 @@ conway.start();
 
 
 /*---------- DATA CONNECTION  ----------*/
-var inputs = ['A1, Image 1', 'A1, Image 2', 'A1, Image 3', 'A1, Image 4', 'A1, Image 5', 'A1, Image 6', 'A1, Image 7', 'A1, Image 8', 'A1, Image 9', 'A1, Image 10', 'A1, Image 11', 'A1, Image 12', 'A1, Image 13', 'A1, Image 14', 'A1, Image 15', 'A1, Image 16'];
-var controls = [
-    {   label: 'minRadius',
-        range: [0.1, 2]
-    },
-    {   label: 'maxRadius',
-        range: [1, 5]
-    },
-    {   label: 'neighborhoodScale',
-        range: [0.1, 2]
-    },
-    {   label: 'mitosisWait',
-        range: [1, 5]
-    },
-];
-var connections = [];
 
+function DataConnector(){
 
-// Assigning random connections to start
-for(var i = 0; i < controls.length; i++){
-    connections.push({
-        control: controls[i],
-        input: inputs[Math.floor(Math.random()*inputs.length)]
-    });
+    var controls = ['water-1', 'water-2', 'water-3', 'water-4', 'water-5',
+                    'light-1', 'light-2', 'light-3',
+                    'AC',
+                    'heating'
+                    ];
+    var connections = [];
+    
+    this.assignConnections = function(obj){
+        if(!obj){
+            // Assigning random connections to start
+            for(var i = 0; i < controls.length; i++){
+                connections.push({
+                    output: i,
+                    control: controls[i]
+                });
+            }
+        }
+    };
+
+    this.getConnections = function(){
+        return connections;
+    };
+
+    this.getControls = function(){
+        return controls;
+    };
+
+    this.assignConnections();
 }
+
+
+
 
 /*---------------------------------*/
 
