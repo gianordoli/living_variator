@@ -20,13 +20,14 @@ app.main = (function(simulation) {
 
 			if(dropdown.length > 0){
 				// console.log(dropdown);
-				$(dropdown)
+				var dataList = $(dropdown)
 					.parent()
 					.parent()
 					.find('.data-output')
-					.prepend('<li>'+data[prop]['pct']+'</li>')
-					;
-				// console.log(dataLog);
+				dataList.prepend('<li>'+data[prop]['pct']+'</li>');
+				if(dataList.children().length > 10){
+					dataList.children().last().remove();
+				}
 			}
 		}
 	};
