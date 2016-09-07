@@ -12,25 +12,25 @@ app.main = (function(simulation) {
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
 
-	function appendData(data){
-		console.log('Called appendData');
-		console.log(data);
-		for(var prop in data){
-			var dropdown = $('option[value="'+prop+'"][selected="selected"]');
+	// function appendData(data){
+	// 	console.log('Called appendData');
+	// 	console.log(data);
+	// 	for(var prop in data){
+	// 		var dropdown = $('option[value="'+prop+'"][selected="selected"]');
 
-			if(dropdown.length > 0){
-				// console.log(dropdown);
-				var dataList = $(dropdown)
-					.parent()
-					.parent()
-					.find('.data-output')
-				dataList.prepend('<li>'+data[prop]['pct']+'</li>');
-				if(dataList.children().length > 10){
-					dataList.children().last().remove();
-				}
-			}
-		}
-	};
+	// 		if(dropdown.length > 0){
+	// 			// console.log(dropdown);
+	// 			var dataList = $(dropdown)
+	// 				.parent()
+	// 				.parent()
+	// 				.find('.data-output')
+	// 			dataList.prepend('<li>'+data[prop]['pct']+'</li>');
+	// 			if(dataList.children().length > 10){
+	// 				dataList.children().last().remove();
+	// 			}
+	// 		}
+	// 	}
+	// };
 
 	function drawUI(outputs, controls, connections){
 		console.log('Called drawUI');
@@ -123,6 +123,7 @@ app.main = (function(simulation) {
 	        	handleChange(dropdown);
 	        }
 	        function handleChange(obj){
+	        	$('.data-output').empty();
     			var options = $(obj).find('option');
     			for(var i = 0; i < options.length; i++){
     				if($(options[i]).val() == $(obj).val()){
@@ -133,6 +134,10 @@ app.main = (function(simulation) {
     			}
 	        }
 		}
+	}
+
+	function updateViz(){
+		
 	}
 
 
@@ -147,10 +152,6 @@ app.main = (function(simulation) {
 			console.log(data.msg);
 		});
 
-		socket.on('data-update', function(data){
-			appendData(data);
-		});	
-
 		socket.on('draw-connections', function(data){
 			console.log(data);
 			drawUI(data.outputs, data.controls, data.connections);
@@ -159,7 +160,8 @@ app.main = (function(simulation) {
 		socket.on('game', function(data){ // raw game data for client side canvas render
 
 			simulation.drawCellData(data, ctx);
-			appendData(data['output']);
+			// appendData(data['output']);
+			updateViz(data['output']);
 			//simulation.drawCellData(data.buffer, data.info, ctx);
 
 			/*

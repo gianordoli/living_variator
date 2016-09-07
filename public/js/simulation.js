@@ -25,7 +25,7 @@ var simulation = {
         }
         */
         
-        console.log(data);
+        // console.log(data);
 
         var width = ctx.canvas.width -100; // leave 100 px on side for input labels
         var height = ctx.canvas.height -100; // leave 100 px on bottom for output labels

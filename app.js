@@ -76,21 +76,21 @@ io.on('connection', function(socket) {
 
     // Receives connection (input to control) update from client
     socket.on('update-connections', function(data){
-        connections = data;
-        console.log(connections);
+        // console.log(data);
+        dataConnector.assignConnections(data);
     });
     /*--------------------------------------------------------------*/
 });
 
 /*---------- DATA INPUT  ----------*/
-var file = 'dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json';
-var data = jsonfile.readFileSync(file);
+// var file = 'dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json';
+// var data = jsonfile.readFileSync(file);
 // Let's simulate a data update
-setInterval(dataUpdate, 1000);
+// setInterval(dataUpdate, 1000);
 
-var currData = [];
-var n = 0;
-function dataUpdate(){
+// var currData = [];
+// var n = 0;
+// function dataUpdate(){
     // NEED TO CONNECT THIS TO TYLER'S SIM
 
     // var column = inputs[0];
@@ -110,7 +110,7 @@ function dataUpdate(){
     // }else{
     //     n = 0;
     // }
-}
+// }
 
 
 /*---------- CONWAY GAME ----------*/
@@ -201,6 +201,8 @@ function DataConnector(){
                     control: controls[i]
                 });
             }
+        }else{
+            connections = obj;
         }
     };
 
