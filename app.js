@@ -126,6 +126,7 @@ var emitConwayGame = function(data){ // send conway data to client
             cells: data.cells,
             input: data.input,
             output: data.output,
+            score: data.score,
             fps: data.fps
         });
 	}
