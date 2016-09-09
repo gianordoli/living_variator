@@ -15,6 +15,7 @@ function Conway (width, height, framerate, wrap) {
 	this.input = {};
 	this.output = {};
 	this.score = []; // score for "music"
+	this.scoreRow = 0; // current row for musical score reading
 	this.nAlive = 0;
 
 	this.updateId = 0;
@@ -117,6 +118,7 @@ Conway.prototype.update = function(){
            	cells: this.cells,
            	input: this.input,
            	output: this.output,
+           	score: this.score,
            	fps: this.fps.fps
         }
 	this.draw(err,data);
@@ -218,7 +220,13 @@ Conway.prototype.getOutputs = function(){
 // ------------------------------------------- SCORE (musical data, line-by-line grid reading)
 Conway.prototype.getScore = function(){
 
-
+	this.score.splice(0,this.score.length); // empty array
+	for (var x=0; x<this.width; x++){
+		var a = this.getCell(x,this.scoreRow).alive ? 1 : 0;
+		this.score.push(a);
+	}
+	this.scoreRow++;
+	if (this.scoreRow >= this.height) this.scoreRow = 0; // wrap to beginning
 }
 
 // ------------------------------------------- SETTERS / GETTERS
