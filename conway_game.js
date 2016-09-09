@@ -72,7 +72,6 @@ Conway.prototype.setup = function() {
 Conway.prototype.update = function(){
 
 	var err = undefined;
-	console.log("begin update - num alive cells: "+this.nAlive);
 
 	for (var i=0; i<this.cells.length; i++){
 
@@ -98,8 +97,6 @@ Conway.prototype.update = function(){
 	// ----------------- recalc num neighbors for each cell in grid
 
 	this.getAllNumNeighbors();
-
-	console.log("end update - num alive cells: "+this.nAlive);
 
 	// ----------------- tick fps
 	this.fps.tick();
@@ -184,7 +181,7 @@ Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 			console.log("error adding output to NaN region x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
 		else {
-			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined };
+			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined, weightedPct: undefined };
 			console.log("added output section "+name+" - x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
 	}
@@ -201,10 +198,14 @@ Conway.prototype.clearOutputs = function(){
 }
 
 Conway.prototype.getOutputs = function(){
+	var totalPct = this.nAlive / this.cells.length; // get total pct alive for weighted Pct
 	for (var out in this.output) {
 	  if (this.output.hasOwnProperty(out)) {
 	  	var o = this.output[out];
 	  	o.pct = this.getSectionPercent(o.x1,o.y1,o.x2,o.y2);
+	  	o.weightedPct = totalPct - o.pct;
+	  		// negative value here means section is less alive than entire board
+	  		// positive value means section is more alive than entire board
 	  }
 	}
 	return this.output;

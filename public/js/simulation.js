@@ -25,7 +25,7 @@ var simulation = {
         }
         */
         
-        // console.log(data);
+        console.log(data);
 
         var width = ctx.canvas.width -100; // leave 100 px on side for input labels
         var height = ctx.canvas.height -100; // leave 100 px on bottom for output labels
@@ -92,19 +92,36 @@ var simulation = {
 			if (data.output.hasOwnProperty(out)){
 				var o = data.output[out];
 
+				// raw pct
+
 				// rect bg lightness : pct alive in region
 				var lt = this.map(o.pct,0,1,5,100,true);
 				ctx.fillStyle = 'hsla(0,0%,'+lt+'%,1.0)';
-				ctx.fillRect(o.x1*cellWidth,height+1,(o.x2-o.x1+1)*cellWidth,99);
+				ctx.fillRect(o.x1*cellWidth,height+1,(o.x2-o.x1+1)*cellWidth,49);
 				ctx.strokeStyle = '#000';
-				ctx.strokeRect(o.x1*cellWidth,height+1,(o.x2-o.x1+1)*cellWidth,99);
+				ctx.strokeRect(o.x1*cellWidth,height+1,(o.x2-o.x1+1)*cellWidth,49);
 
 				// label
-				ctx.fillStyle = 'rgba(0,0,0,0.6)';
-				ctx.fillRect(o.x1*cellWidth+5,height+5,(o.x2-o.x1+1)*cellWidth-10,50);
+				// ctx.fillStyle = 'rgba(0,0,0,0.6)';
+				// ctx.fillRect(o.x1*cellWidth+5,height+5,(o.x2-o.x1+1)*cellWidth-10,25);
 				ctx.fillStyle = 'white';
 				ctx.fillText("out "+out+":", o.x1*cellWidth+12, height+20);
 				ctx.fillText(o.pct.toFixed(2), o.x1*cellWidth+12, height+35);
+
+				// weighted pct (diff between game alive and section alive)
+
+				// bg
+				lt = this.map(o.weightedPct,-0.5,0.5,5,100,true);
+				ctx.fillStyle = 'hsla(0,0%,'+lt+'%,1.0)';
+				ctx.fillRect(o.x1*cellWidth,height+50,(o.x2-o.x1+1)*cellWidth,49);
+				ctx.strokeStyle = '#000';
+				ctx.strokeRect(o.x1*cellWidth,height+50,(o.x2-o.x1+1)*cellWidth,49);
+
+				// label
+				ctx.fillStyle = 'white';
+				ctx.fillText("wPct "+out+":", o.x1*cellWidth+12, height+70);
+				var scaledWPct = o.weightedPct * 10;
+				ctx.fillText(scaledWPct.toFixed(3), o.x1*cellWidth+12, height+85);
 			}
 		}
 	}
