@@ -14,6 +14,7 @@ function Conway (width, height, framerate, wrap) {
 	this.cells = [];
 	this.input = {};
 	this.output = {};
+	this.score = []; // score for "music"
 	this.nAlive = 0;
 
 	this.updateId = 0;
@@ -100,6 +101,9 @@ Conway.prototype.update = function(){
 
 	// ----------------- tick fps
 	this.fps.tick();
+
+	// ----------------- do musical score
+	this.getScore();
 
 	// ----------------- calc output streams
 	this.getOutputs();
@@ -203,12 +207,18 @@ Conway.prototype.getOutputs = function(){
 	  if (this.output.hasOwnProperty(out)) {
 	  	var o = this.output[out];
 	  	o.pct = this.getSectionPercent(o.x1,o.y1,o.x2,o.y2);
-	  	o.weightedPct = totalPct - o.pct;
+	  	o.weightedPct = o.pct - totalPct;
 	  		// negative value here means section is less alive than entire board
 	  		// positive value means section is more alive than entire board
 	  }
 	}
 	return this.output;
+}
+
+// ------------------------------------------- SCORE (musical data, line-by-line grid reading)
+Conway.prototype.getScore = function(){
+
+
 }
 
 // ------------------------------------------- SETTERS / GETTERS
