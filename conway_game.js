@@ -22,6 +22,10 @@ function Conway (width, height, framerate, wrap) {
 	this.updateId = 0;
 	this.fps = new Fps();
 	this.setup();
+
+	// output tracking for smoothing
+	this.lastOutputs = {};
+	this.smoothingFactor = 5; // num of output vals to save for smoothing
 }
 
 // in Conway's Game of Life, cells have boolean state: alive or dead
@@ -196,7 +200,10 @@ Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 			console.log("error adding output to NaN region x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
 		else {
-			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined, weightedPct: undefined };
+			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2,
+									pct: undefined, weightedPct: undefined,
+									pctSmooth: undefined, weightedPctSmooth: undefined };
+			this.lastOutputs[name] = {pct: [], weightedPct: []}; // smoothing val trackers
 			console.log("added output section "+name+" - x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
 	}
@@ -206,7 +213,8 @@ Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 Conway.prototype.clearOutputs = function(){
 	for (var out in this.output) {
 		if (this.output.hasOwnProperty(out)) { 
-			delete this.output[out]; 
+			delete this.output[out];
+			delete this.lastOutputs[out]; // delete smoothing val tracker
 		} 
 	}
 	return this.output;
@@ -221,6 +229,20 @@ Conway.prototype.getOutputs = function(){
 	  	o.weightedPct = o.pct - totalPct;
 	  		// negative value here means section is less alive than entire board
 	  		// positive value means section is more alive than entire board
+
+	  	// smooth
+
+	  	this.lastOutputs[out].pct.push(o.pct); // add values to smoothing arrays
+	  	this.lastOutputs[out].weightedPct.push(o.weightedPct); 
+
+	  	if (this.lastOutputs[out].pct.length > this.smoothingFactor) {
+	  		this.lastOutputs[out].pct.shift(); // pops first element in array, so length is always <= smoothingFactor
+	  		this.lastOutputs[out].weightedPct.shift();
+	  	}
+
+	  	// average array elements
+	  	o.pctSmooth = this.average(this.lastOutputs[out].pct);
+	  	o.weightedPctSmooth = this.average(this.lastOutputs[out].weightedPct);
 	  }
 	}
 	return this.output;
@@ -358,6 +380,22 @@ Conway.prototype.getAllNumNeighbors = function(){ // calc num neighbors for each
 		c.n = n;
 	}
 	this.nAlive = nAlive;
+}
+
+Conway.prototype.average = function(array){
+	if (!Array.isArray(array)){
+		console.log("Conway.average() attempting to calc array average of non-array")
+		return undefined;
+	}
+	var sum=0;
+	for (var i=0; i<array.length; i++){
+		if (isNaN(array[i])) {
+			console.log("Conway.average() attempting to calc array average with NaN at array["+i+"]");
+			return undefined;
+		}
+		sum+=array[i];
+	}
+	return sum/array.length;
 }
 
 module.exports = Conway;
