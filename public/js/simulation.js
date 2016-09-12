@@ -120,8 +120,8 @@ var simulation = {
 				// label
 				ctx.fillStyle = 'white';
 				ctx.fillText("wPct "+out+":", o.x1*cellWidth+12, height+70);
-				var scaledWPct = o.weightedPct * 10;
-				ctx.fillText(scaledWPct.toFixed(3), o.x1*cellWidth+12, height+85);
+				var scaledWPct = o.weightedPct;
+				ctx.fillText(scaledWPct.toFixed(4), o.x1*cellWidth+12, height+85);
 			}
 		}
 	},
