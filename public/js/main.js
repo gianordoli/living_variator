@@ -11,6 +11,8 @@ app.main = (function(simulation) {
 	//body.appendChild(img);	
 	var canvas = document.getElementById('sim');
 	var ctx = canvas.getContext('2d');
+	var graphCanvas = document.getElementById('outGraph');
+	var graphCtx = graphCanvas.getContext('2d');
 
 	// function appendData(data){
 	// 	console.log('Called appendData');
@@ -204,6 +206,8 @@ app.main = (function(simulation) {
 		socket.on('game', function(data){ // raw game data for client side canvas render
 
 			simulation.drawCellData(data, ctx);
+			simulation.drawOutputGraph(data, graphCtx); // draw output graph for smooth testing
+			
 			// appendData(data['output']);
 			updateViz(data['output']);
 			//simulation.drawCellData(data.buffer, data.info, ctx);
