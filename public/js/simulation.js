@@ -144,6 +144,8 @@ var simulation = {
         var currentCanvas = ctx.getImageData(81,0,width,height);
         ctx.putImageData(currentCanvas,80,0); // shift current graph data to left 1 pixel
 
+        var o = data.output["0"]; // just draw first output
+
         var graphHeight = height/4;
 
         // draw labels
@@ -153,9 +155,11 @@ var simulation = {
 		ctx.fillText("pct 0", 5, graphHeight/2);
 		ctx.fillText("pctSmooth", 5, graphHeight*2-graphHeight/2);
 		ctx.fillText("weightedPct 0", 5, graphHeight*3-graphHeight/2);
-		ctx.fillText("w...PctSmooth", 5, graphHeight*4-graphHeight/2);
+		// weighted pct + outMap val
+		var posY = graphHeight*4-graphHeight/2;
+		ctx.fillText("w...PctSmooth", 5, posY);
+		ctx.fillText("outMap: "+o.outMap, 5, posY+15);
 
-		var o = data.output["0"]; // just draw first output
 
 		ctx.fillStyle = 'black';
 		// pct
@@ -167,9 +171,17 @@ var simulation = {
 		// weightedPct
 		var wPctH = this.map(o.weightedPct,0.1,-0.1,graphHeight*2+5,graphHeight*3-5,true);
 		ctx.fillRect(width-1,wPctH,1,1);
+
 		// weightedPctSmooth
+		// -----------------
+		// outMap val is bg for graph
+		ctx.fillStyle = 'rgb('+o.outMap+','+o.outMap+','+o.outMap+')';
+		ctx.fillRect(width-1,graphHeight*3,1,graphHeight);
+		// weightedPctSmooth plot
+		ctx.fillStyle = 'black';
 		var wPctSmoothH = this.map(o.weightedPctSmooth,0.1,-0.1,graphHeight*3+5,height-5,true);
-		ctx.fillRect(width-1,wPctSmoothH,1,1);
+		ctx.fillRect(width-1,wPctSmoothH,1,1);		
+
 
 		// draw boxes to contain each line
 		ctx.strokeStyle = 'blue';

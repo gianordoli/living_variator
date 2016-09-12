@@ -211,8 +211,10 @@ Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 		}
 		else {
 			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2,
-									pct: undefined, weightedPct: undefined,
-									pctSmooth: undefined, weightedPctSmooth: undefined };
+									pct: undefined, weightedPct: undefined, // pct alive in output section, diff pct alive vs. total pct alive
+									pctSmooth: undefined, weightedPctSmooth: undefined, // smoothed
+									outMap: undefined }; // weightedPctSmooth, mapped from -0.1:0.1 to 0:255, integers
+
 			this.lastOutputs[name] = {pct: [], weightedPct: []}; // smoothing val trackers
 			console.log("added output section "+name+" - x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
@@ -252,6 +254,9 @@ Conway.prototype.getOutputs = function(){
 	  	// average array elements
 	  	o.pctSmooth = this.average(this.lastOutputs[out].pct);
 	  	o.weightedPctSmooth = this.average(this.lastOutputs[out].weightedPct);
+
+	  	// map weightedPctSmooth from -0.1:0.1 to 0:255
+	  	o.outMap = Math.round(this.map(o.weightedPctSmooth,-0.1,0.1,0,255,true)); // clamp + make integer
 	  }
 	}
 	return this.output;
@@ -415,6 +420,20 @@ Conway.prototype.average = function(array){
 		console.log("Conway.average() attempting to calc array average of empty array");
 		return undefined;
 	}
+}
+
+Conway.prototype.map = function(val,oldLo,oldHi,newLo,newHi,bClamp){
+
+	if (isNaN(val)) return undefined;
+	if (isNaN(oldLo) || isNaN(oldHi) || isNaN(newLo) || isNaN(newHi)) return val;
+
+	var pct = (val - oldLo) / (oldHi - oldLo);
+	var newVal = (newHi - newLo) * pct + newLo;
+	if (bClamp){
+		if (newVal > newHi) newVal = newHi;
+		else if (newVal < newLo) newVal = newLo;
+	}
+	return newVal;
 }
 
 module.exports = Conway;
