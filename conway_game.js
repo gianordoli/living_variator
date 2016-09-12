@@ -13,6 +13,13 @@ function Conway (width, height, framerate, wrap) {
 	this.targetFps = isNaN(framerate) ? 30 : framerate;
 	this.wrap = (typeof(wrap) === "boolean") ? wrap : false;
 	this.cells = [];
+	/* cell[i].
+				idx: array index = y*this.width+x,
+				alive: false, // all cells start dead
+				x: x, // x pos
+				y: y,  // y pos
+				n: 0 // num alive neighbors
+	*/
 	this.input = {};
 	this.output = {};
 	this.score = []; // score for "music"
@@ -26,6 +33,9 @@ function Conway (width, height, framerate, wrap) {
 	// output tracking for smoothing
 	this.lastOutputs = {};
 	this.smoothingFactor = 5; // num of output vals to save for smoothing
+
+	// remove old data from score_log.txt
+	fs.writeFile("score_log.txt","");
 }
 
 // in Conway's Game of Life, cells have boolean state: alive or dead
@@ -231,11 +241,10 @@ Conway.prototype.getOutputs = function(){
 	  		// positive value means section is more alive than entire board
 
 	  	// smooth
-
 	  	this.lastOutputs[out].pct.push(o.pct); // add values to smoothing arrays
 	  	this.lastOutputs[out].weightedPct.push(o.weightedPct); 
 
-	  	if (this.lastOutputs[out].pct.length > this.smoothingFactor) {
+	  	while (this.lastOutputs[out].pct.length > this.smoothingFactor) {
 	  		this.lastOutputs[out].pct.shift(); // pops first element in array, so length is always <= smoothingFactor
 	  		this.lastOutputs[out].weightedPct.shift();
 	  	}
@@ -253,8 +262,12 @@ Conway.prototype.getScore = function(){
 
 	this.score.splice(0,this.score.length); // empty array
 	for (var x=0; x<this.width; x++){
-		var a = this.getCell(x,this.scoreRow).alive ? 1 : 0;
-		this.score.push(a);
+		var cell = this.getCell(x,this.scoreRow);
+		if (cell.alive){
+			this.score.push(1+cell.n);
+		} else {
+			this.score.push(0);
+		}
 	}
 	this.scoreRow++;
 	if (this.scoreRow >= this.height) this.scoreRow = 0; // wrap to beginning
@@ -377,9 +390,9 @@ Conway.prototype.getAllNumNeighbors = function(){ // calc num neighbors for each
 				}
 			}
 		}
-		c.n = n;
+		c.n = n; // save num neighbors to cell
 	}
-	this.nAlive = nAlive;
+	this.nAlive = nAlive; // num alive cells
 }
 
 Conway.prototype.average = function(array){
@@ -387,15 +400,21 @@ Conway.prototype.average = function(array){
 		console.log("Conway.average() attempting to calc array average of non-array")
 		return undefined;
 	}
-	var sum=0;
-	for (var i=0; i<array.length; i++){
-		if (isNaN(array[i])) {
-			console.log("Conway.average() attempting to calc array average with NaN at array["+i+"]");
-			return undefined;
+	if (array.length > 0){
+		var sum=0;
+		for (var i=0; i<array.length; i++){
+			if (isNaN(array[i])) {
+				console.log("Conway.average() attempting to calc array average with NaN at array["+i+"]");
+				return undefined;
+			}
+			sum+=array[i];
 		}
-		sum+=array[i];
+		return sum/array.length;
 	}
-	return sum/array.length;
+	else {
+		console.log("Conway.average() attempting to calc array average of empty array");
+		return undefined;
+	}
 }
 
 module.exports = Conway;
