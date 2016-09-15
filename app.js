@@ -66,9 +66,11 @@ app.post('/send-input', function(request, response){
                 ' request for ' + request.url);
 
     // console.log(request);
+    // console.log(request["body"]);
     // console.log(request["body"]["input"]);
     // console.log(request["body"]["input"].length);
-    var input = request["body"]["input"];
+    var input = JSON.parse(request["body"]["input"]);
+    console.log(input);
 
     var message;
     if(input.length !== 16){
@@ -85,6 +87,7 @@ app.post('/send-input', function(request, response){
         message = "Received input: " + input;
         newInput(input);
     }
+    console.log(message);
     // Send back the data
     response.json(message);
 });
