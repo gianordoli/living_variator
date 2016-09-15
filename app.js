@@ -32,6 +32,8 @@ var io = require('socket.io')(server);
 
 /*---------------------------------*/
 
+
+/*-------------------- ROUTES  --------------------*/
 app.get('/get-output', function(request, response){
     console.log('The client just sent a ' + request.method +
                 ' request for ' + request.url);
@@ -80,6 +82,20 @@ app.post('/send-input', function(request, response){
     // Send back the data
     response.json(message);
 });
+
+
+/*---------- SOME AUX DATA FUNCTIONS  ----------*/
+Array.prototype.max = function() {
+  return Math.max.apply(null, this);
+};
+
+Array.prototype.min = function() {
+  return Math.min.apply(null, this);
+};
+
+var map = function(n, start1, stop1, start2, stop2) {
+  return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
+};
 
 
 /*---------- SOCKET.IO  ----------*/
@@ -187,10 +203,10 @@ var conway = new Conway(100,80,15,true); // w, h, fps, wrap edges?
 // conway.initSectionPercent(0,0,99,79,0.5); // half alive
 
 var initInputSections = function(){ // init input sections (8 vertical divisions)
-    var inpH = Math.floor(conway.height/8);
+    var inpH = Math.floor(conway.height/16);
     var inpW = conway.width;
     var x1 = 0, y1 = 0, x2 = inpW-1, y2 = inpH-1;
-    for (var i=0; i<8; i++){
+    for (var i=0; i<16; i++){
         var name = i.toString();
         conway.addInput(x1,y1,x2,y2,name);
         y1+=inpH;
@@ -215,6 +231,7 @@ var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
     if (draw) console.log("set draw callback successfully");
     else console.log("error setting draw callback");
 
+var n = 0;
 var newInput = function(){
     conway.stop();
     var min = data[n].min();
