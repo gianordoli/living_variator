@@ -32,6 +32,27 @@ var io = require('socket.io')(server);
 
 /*---------------------------------*/
 
+app.get('/get-output', function(request, response){
+    console.log('The client just sent a ' + request.method +
+                ' request for ' + request.url);
+
+    var data = conway.getOutputs();
+    var connections = dataConnector.getConnections();
+
+    var obj = {};
+    for(var i = 0; i < connections.length; i++){
+        var control = connections[i]["control"];
+        var output = connections[i]["output"];
+        // console.log(output);
+        // console.log(typeof output);  // number
+        // console.log(data["output"]["0"]);
+        var outputValue = data[output.toString()]["outMap"];
+        // console.log(outputValue);
+        obj[control] = outputValue;
+    }
+    // console.log(obj);
+    response.json(obj);
+});
 
 
 /*---------- SOCKET.IO  ----------*/
@@ -118,6 +139,9 @@ io.on('connection', function(socket) {
 var Conway = require('./conway_game');
 
 var emitConwayGame = function(data){ // send conway data to client
+    
+    // console.log("Called emitConwayGame.");
+
 	if (connectedUsers > 0){
         io.sockets.emit('game', {
             type: 'conway',
