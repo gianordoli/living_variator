@@ -78,6 +78,7 @@ app.post('/send-input', function(request, response){
     }
     if(message === undefined){
         message = "Received input: " + input;
+        newInput(input);
     }
     // Send back the data
     response.json(message);
@@ -231,28 +232,46 @@ var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
     if (draw) console.log("set draw callback successfully");
     else console.log("error setting draw callback");
 
-var n = 0;
-var newInput = function(){
+
+var newInput = function(data){
     conway.stop();
-    var min = data[n].min();
-    var max = data[n].max();
+    var min = data.min();
+    var max = data.max();
     // console.log(min, max);
-    for (var i=0; i<data[n].length; i++){
+    for (var i=0; i<data.length; i++){
         // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
-        var pct = map(data[n][i], min, max, 0, 0.5);
+        var pct = map(data[i], min, max, 0, 0.5);
         // console.log(pct);
         conway.setInput(i.toString(), pct);
         console.log("set conway input "+i+" to pct: "+pct);
     }
-    if (n < data.length - 1) n++;
-    else n = 0;
     conway.start();
 };
 
 
+// DUMMY DATA
+// var file = 'dummy_data/dummy_data.json';
+// var data = jsonfile.readFileSync(file);     // Read dummy data
+// var n = 0;
+// var newInput = function(){
+//     conway.stop();
+//     var min = data[n].min();
+//     var max = data[n].max();
+//     // console.log(min, max);
+//     for (var i=0; i<data[n].length; i++){
+//         // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+//         var pct = map(data[n][i], min, max, 0, 0.5);
+//         // console.log(pct);
+//         conway.setInput(i.toString(), pct);
+//         console.log("set conway input "+i+" to pct: "+pct);
+//     }
+//     if (n < data.length - 1) n++;
+//     else n = 0;
+//     conway.start();
+// };
+
+
 var dataConnector = new DataConnector();    // Connect i/o
-var file = 'dummy_data/dummy_data.json';
-var data = jsonfile.readFileSync(file);     // Read dummy data
 initInputSections();
 initOutputSections();
 setInterval(newInput, 15000);               // every 15 sec, 8 new inputs ranged 0-1
