@@ -9,7 +9,7 @@ var    express		= require('express')
 var app = express();						// our Express app
 
 // Body Parser
-app.use(bodyParser.urlencoded({ extended: false }));// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json());							// parse application/json
 
 // Express server
@@ -32,6 +32,71 @@ var io = require('socket.io')(server);
 
 /*---------------------------------*/
 
+
+/*-------------------- ROUTES  --------------------*/
+app.get('/get-output', function(request, response){
+    console.log('The client just sent a ' + request.method +
+                ' request for ' + request.url);
+
+    var data = conway.getOutputs();
+    var connections = dataConnector.getConnections();
+
+    var obj = {};
+    for(var i = 0; i < connections.length; i++){
+        var control = connections[i]["control"];
+        var output = connections[i]["output"];
+        // console.log(output);
+        // console.log(typeof output);  // number
+        // console.log(data["output"]["0"]);
+        var outputValue = data[output.toString()]["outMap"];
+        // console.log(outputValue);
+        obj[control] = outputValue;
+    }
+    // console.log(obj);
+    response.json(obj);
+});
+
+app.post('/send-input', function(request, response){
+    console.log('The client just sent a ' + request.method +
+                ' request for ' + request.url);
+
+    // console.log(request);
+    // console.log(request["body"]["input"]);
+    // console.log(request["body"]["input"].length);
+    var input = request["body"]["input"];
+
+    var message;
+    if(input.length !== 16){
+        message = "Missing data points. Expected 16, got " + input.length;
+    }else{
+        for(var i = 0; i < input.length; i++){
+            if(isNaN(input[i])){
+                message = "Input is not a number.";
+                break;
+            }
+        }
+    }
+    if(message === undefined){
+        message = "Received input: " + input;
+        newInput(input);
+    }
+    // Send back the data
+    response.json(message);
+});
+
+
+/*---------- SOME AUX DATA FUNCTIONS  ----------*/
+Array.prototype.max = function() {
+  return Math.max.apply(null, this);
+};
+
+Array.prototype.min = function() {
+  return Math.min.apply(null, this);
+};
+
+var map = function(n, start1, stop1, start2, stop2) {
+  return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
+};
 
 
 /*---------- SOCKET.IO  ----------*/
@@ -118,6 +183,9 @@ io.on('connection', function(socket) {
 var Conway = require('./conway_game');
 
 var emitConwayGame = function(data){ // send conway data to client
+    
+    // console.log("Called emitConwayGame.");
+
 	if (connectedUsers > 0){
         io.sockets.emit('game', {
             type: 'conway',
@@ -126,6 +194,7 @@ var emitConwayGame = function(data){ // send conway data to client
             cells: data.cells,
             input: data.input,
             output: data.output,
+            score: data.score,
             fps: data.fps
         });
 	}
@@ -135,10 +204,10 @@ var conway = new Conway(100,80,15,true); // w, h, fps, wrap edges?
 // conway.initSectionPercent(0,0,99,79,0.5); // half alive
 
 var initInputSections = function(){ // init input sections (8 vertical divisions)
-    var inpH = Math.floor(conway.height/8);
+    var inpH = Math.floor(conway.height/16);
     var inpW = conway.width;
     var x1 = 0, y1 = 0, x2 = inpW-1, y2 = inpH-1;
-    for (var i=0; i<8; i++){
+    for (var i=0; i<16; i++){
         var name = i.toString();
         conway.addInput(x1,y1,x2,y2,name);
         y1+=inpH;
@@ -156,29 +225,57 @@ var initOutputSections = function(){ // init output sections (10 horizontal divi
         x2+=outW;
     }
 };
-initInputSections();
-initOutputSections();
-var dataConnector = new DataConnector();
+
 
 // setup draw callback
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
     if (draw) console.log("set draw callback successfully");
     else console.log("error setting draw callback");
 
-// setup dummy inputs
-setInterval(function(){
+
+var newInput = function(data){
     conway.stop();
-    for (var i=0; i<8; i++){
-        var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+    console.log(data);
+    var min = data.min();
+    var max = data.max();
+    // console.log(min, max);
+    for (var i=0; i<data.length; i++){
+        // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+        var pct = map(data[i], min, max, 0, 0.5);
+        // console.log(pct);
         conway.setInput(i.toString(), pct);
         console.log("set conway input "+i+" to pct: "+pct);
     }
     conway.start();
-}, 15000); // every 15 sec, 8 new inputs ranged 0-1
+};
 
-// start game
-conway.start();
 
+// DUMMY DATA
+// var file = 'dummy_data/dummy_data.json';
+// var data = jsonfile.readFileSync(file);     // Read dummy data
+// var n = 0;
+// var newInput = function(){
+//     conway.stop();
+//     var min = data[n].min();
+//     var max = data[n].max();
+//     // console.log(min, max);
+//     for (var i=0; i<data[n].length; i++){
+//         // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+//         var pct = map(data[n][i], min, max, 0, 0.5);
+//         // console.log(pct);
+//         conway.setInput(i.toString(), pct);
+//         console.log("set conway input "+i+" to pct: "+pct);
+//     }
+//     if (n < data.length - 1) n++;
+//     else n = 0;
+//     conway.start();
+// };
+// setInterval(newInput, 15000);               // every 15 sec, 8 new inputs ranged 0-1
+
+var dataConnector = new DataConnector();    // Connect i/o
+initInputSections();
+initOutputSections();
+conway.start();                             // Start game
 
 
 /*---------- DATA CONNECTION  ----------*/

@@ -4,6 +4,7 @@
 // ------------------------------------------------
 
 var Fps = require('./fps');
+var fs = require('fs');
 
 function Conway (width, height, framerate, wrap) {
 
@@ -12,13 +13,29 @@ function Conway (width, height, framerate, wrap) {
 	this.targetFps = isNaN(framerate) ? 30 : framerate;
 	this.wrap = (typeof(wrap) === "boolean") ? wrap : false;
 	this.cells = [];
+	/* cell[i].
+				idx: array index = y*this.width+x,
+				alive: false, // all cells start dead
+				x: x, // x pos
+				y: y,  // y pos
+				n: 0 // num alive neighbors
+	*/
 	this.input = {};
 	this.output = {};
+	this.score = []; // score for "music"
+	this.scoreRow = 0; // current row for musical score reading
 	this.nAlive = 0;
 
 	this.updateId = 0;
 	this.fps = new Fps();
 	this.setup();
+
+	// output tracking for smoothing
+	this.lastOutputs = {};
+	this.smoothingFactor = 5; // num of output vals to save for smoothing
+
+	// remove old data from score_log.txt
+	fs.writeFile("score_log.txt","");
 }
 
 // in Conway's Game of Life, cells have boolean state: alive or dead
@@ -72,7 +89,6 @@ Conway.prototype.setup = function() {
 Conway.prototype.update = function(){
 
 	var err = undefined;
-	console.log("begin update - num alive cells: "+this.nAlive);
 
 	for (var i=0; i<this.cells.length; i++){
 
@@ -99,10 +115,11 @@ Conway.prototype.update = function(){
 
 	this.getAllNumNeighbors();
 
-	console.log("end update - num alive cells: "+this.nAlive);
-
 	// ----------------- tick fps
 	this.fps.tick();
+
+	// ----------------- do musical score
+	this.getScore();
 
 	// ----------------- calc output streams
 	this.getOutputs();
@@ -116,9 +133,18 @@ Conway.prototype.update = function(){
            	cells: this.cells,
            	input: this.input,
            	output: this.output,
+           	score: this.score,
            	fps: this.fps.fps
         }
 	this.draw(err,data);
+
+	// log to file
+	var scoreLog = '';
+	for (var i=0; i<this.score.length; i++){
+		scoreLog+=this.score[i];
+	}
+	scoreLog+='\n';
+	fs.appendFile('score_log.txt',scoreLog);
 }
 
 // ------------------------------------------- "DRAW" CALLBACK ----------//
@@ -184,7 +210,12 @@ Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 			console.log("error adding output to NaN region x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
 		else {
-			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2, pct: undefined };
+			this.output[name] = { x1:x1, y1:y1, x2:x2, y2:y2,
+									pct: undefined, weightedPct: undefined, // pct alive in output section, diff pct alive vs. total pct alive
+									pctSmooth: undefined, weightedPctSmooth: undefined, // smoothed
+									outMap: undefined }; // weightedPctSmooth, mapped from -0.1:0.1 to 0:255, integers
+
+			this.lastOutputs[name] = {pct: [], weightedPct: []}; // smoothing val trackers
 			console.log("added output section "+name+" - x1,y1 : x2,y2: "+x1+','+y1+" : "+x2+','+y2);
 		}
 	}
@@ -194,20 +225,57 @@ Conway.prototype.addOutput = function(x1,y1,x2,y2,name){
 Conway.prototype.clearOutputs = function(){
 	for (var out in this.output) {
 		if (this.output.hasOwnProperty(out)) { 
-			delete this.output[out]; 
+			delete this.output[out];
+			delete this.lastOutputs[out]; // delete smoothing val tracker
 		} 
 	}
 	return this.output;
 }
 
 Conway.prototype.getOutputs = function(){
+	var totalPct = this.nAlive / this.cells.length; // get total pct alive for weighted Pct
 	for (var out in this.output) {
 	  if (this.output.hasOwnProperty(out)) {
 	  	var o = this.output[out];
 	  	o.pct = this.getSectionPercent(o.x1,o.y1,o.x2,o.y2);
+	  	o.weightedPct = o.pct - totalPct;
+	  		// negative value here means section is less alive than entire board
+	  		// positive value means section is more alive than entire board
+
+	  	// smooth
+	  	this.lastOutputs[out].pct.push(o.pct); // add values to smoothing arrays
+	  	this.lastOutputs[out].weightedPct.push(o.weightedPct); 
+
+	  	while (this.lastOutputs[out].pct.length > this.smoothingFactor) {
+	  		this.lastOutputs[out].pct.shift(); // pops first element in array, so length is always <= smoothingFactor
+	  		this.lastOutputs[out].weightedPct.shift();
+	  	}
+
+	  	// average array elements
+	  	o.pctSmooth = this.average(this.lastOutputs[out].pct);
+	  	o.weightedPctSmooth = this.average(this.lastOutputs[out].weightedPct);
+
+	  	// map weightedPctSmooth from -0.1:0.1 to 0:255
+	  	o.outMap = Math.round(this.map(o.weightedPctSmooth,-0.1,0.1,0,255,true)); // clamp + make integer
 	  }
 	}
 	return this.output;
+}
+
+// ------------------------------------------- SCORE (musical data, line-by-line grid reading)
+Conway.prototype.getScore = function(){
+
+	this.score.splice(0,this.score.length); // empty array
+	for (var x=0; x<this.width; x++){
+		var cell = this.getCell(x,this.scoreRow);
+		if (cell.alive){
+			this.score.push(1+cell.n);
+		} else {
+			this.score.push(0);
+		}
+	}
+	this.scoreRow++;
+	if (this.scoreRow >= this.height) this.scoreRow = 0; // wrap to beginning
 }
 
 // ------------------------------------------- SETTERS / GETTERS
@@ -327,9 +395,45 @@ Conway.prototype.getAllNumNeighbors = function(){ // calc num neighbors for each
 				}
 			}
 		}
-		c.n = n;
+		c.n = n; // save num neighbors to cell
 	}
-	this.nAlive = nAlive;
+	this.nAlive = nAlive; // num alive cells
+}
+
+Conway.prototype.average = function(array){
+	if (!Array.isArray(array)){
+		console.log("Conway.average() attempting to calc array average of non-array")
+		return undefined;
+	}
+	if (array.length > 0){
+		var sum=0;
+		for (var i=0; i<array.length; i++){
+			if (isNaN(array[i])) {
+				console.log("Conway.average() attempting to calc array average with NaN at array["+i+"]");
+				return undefined;
+			}
+			sum+=array[i];
+		}
+		return sum/array.length;
+	}
+	else {
+		console.log("Conway.average() attempting to calc array average of empty array");
+		return undefined;
+	}
+}
+
+Conway.prototype.map = function(val,oldLo,oldHi,newLo,newHi,bClamp){
+
+	if (isNaN(val)) return undefined;
+	if (isNaN(oldLo) || isNaN(oldHi) || isNaN(newLo) || isNaN(newHi)) return val;
+
+	var pct = (val - oldLo) / (oldHi - oldLo);
+	var newVal = (newHi - newLo) * pct + newLo;
+	if (bClamp){
+		if (newVal > newHi) newVal = newHi;
+		else if (newVal < newLo) newVal = newLo;
+	}
+	return newVal;
 }
 
 module.exports = Conway;

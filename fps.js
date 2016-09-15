@@ -14,6 +14,7 @@ function Fps(){
 	this.sumFps = 0; // fps calc sum over 1 sec
 	this.nFramesThisSec = 0;  // frame ticker
 	this.lastDrawTime = 0; // unix timestamp of last frame for fps calc
+	this.totalMs = 0; // time since start
 
 	// loop id
 	this.fpsId = 0;
@@ -54,6 +55,7 @@ Fps.prototype.tick = function(){ // calc per frame fps
 	this.runningFps = (elapsedMs > 0) ? 1000/elapsedMs : 1000;
 	this.sumFps += this.runningFps;
 	this.lastDrawTime = Date.now();
+	this.totalMs+=elapsedMs;
 }
 
 // ---------------------- get fps -- call every second
