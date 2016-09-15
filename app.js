@@ -67,29 +67,67 @@ app.post('/send-input', function(request, response){
 
     // console.log(request);
     // console.log(request["body"]);
+    // console.log(typeof request["body"]);
+    // console.log(Object.keys(request["body"]).length);
     // console.log(request["body"]["input"]);
     // console.log(request["body"]["input"].length);
-    var input = JSON.parse(request["body"]["input"]);
-    console.log(input);
+    // console.log(input);
+	
+	var err;
+    
+    if(Object.keys(request["body"]).length === 0){
+    	
+    	err = "Received an empty object.";
 
-    var message;
-    if(input.length !== 16){
-        message = "Missing data points. Expected 16, got " + input.length;
+    }else if(!request["body"].hasOwnProperty("input")){
+    	
+    	err = "Expecting data enclosed into property 'input'.";
+    	
     }else{
-        for(var i = 0; i < input.length; i++){
-            if(isNaN(input[i])){
-                message = "Input is not a number.";
-                break;
-            }
-        }
+		
+		var input;
+
+		// Let's check data types first. Python is sending a string, and postman an object. So...
+    	if(typeof request["body"]["input"] === "string"){
+    		
+    		input = JSON.parse(request["body"]["input"]);
+
+    	}else if(typeof request["body"]["input"] === "object"){
+
+    		input = request["body"]["input"];
+    	
+    	}else{
+
+    		err = "Data type not recognized."
+    	}
+
+    	// If we have an input...
+    	if(input !== undefined){
+		    
+		    if(input.length !== 16){
+		        
+		        err = "Missing data points. Expected 16, got " + input.length;
+
+		    }else{
+
+		        for(var i = 0; i < input.length; i++){
+		            if(isNaN(input[i])){
+		                err = "Input is not a number.";
+		                break;
+		            }
+		        }
+		    }
+    	}
     }
-    if(message === undefined){
-        message = "Received input: " + input;
+
+    // If everything went right...
+    if(err === undefined){
         newInput(input);
+        response.json("Received input: " + input);
+    }else{
+		console.log(err);
+    	response.json(err);
     }
-    console.log(message);
-    // Send back the data
-    response.json(message);
 });
 
 
