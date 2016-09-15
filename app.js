@@ -9,7 +9,7 @@ var    express		= require('express')
 var app = express();						// our Express app
 
 // Body Parser
-app.use(bodyParser.urlencoded({ extended: false }));// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: true })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json());							// parse application/json
 
 // Express server
@@ -52,6 +52,33 @@ app.get('/get-output', function(request, response){
     }
     // console.log(obj);
     response.json(obj);
+});
+
+app.post('/send-input', function(request, response){
+    console.log('The client just sent a ' + request.method +
+                ' request for ' + request.url);
+
+    // console.log(request);
+    // console.log(request["body"]["input"]);
+    // console.log(request["body"]["input"].length);
+    var input = request["body"]["input"];
+
+    var message;
+    if(input.length !== 16){
+        message = "Missing data points. Expected 16, got " + input.length;
+    }else{
+        for(var i = 0; i < input.length; i++){
+            if(isNaN(input[i])){
+                message = "Input is not a number.";
+                break;
+            }
+        }
+    }
+    if(message === undefined){
+        message = "Received input: " + input;
+    }
+    // Send back the data
+    response.json(message);
 });
 
 
