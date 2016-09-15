@@ -38,10 +38,15 @@ app.get('/get-output', function(request, response){
     console.log('The client just sent a ' + request.method +
                 ' request for ' + request.url);
 
-    var data = conway.getOutputs();
     var connections = dataConnector.getConnections();
+    var data = conway.getOutputs();
+    // console.log("score: ", score);
 
+    // Response object
     var obj = {};
+    obj["output"] = {};
+    obj["score"] = conway.score;
+
     for(var i = 0; i < connections.length; i++){
         var control = connections[i]["control"];
         var output = connections[i]["output"];
@@ -50,7 +55,7 @@ app.get('/get-output', function(request, response){
         // console.log(data["output"]["0"]);
         var outputValue = data[output.toString()]["outMap"];
         // console.log(outputValue);
-        obj[control] = outputValue;
+        obj["output"][control] = outputValue;
     }
     // console.log(obj);
     response.json(obj);
