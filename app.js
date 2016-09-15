@@ -208,29 +208,38 @@ var initOutputSections = function(){ // init output sections (10 horizontal divi
         x2+=outW;
     }
 };
-initInputSections();
-initOutputSections();
-var dataConnector = new DataConnector();
+
 
 // setup draw callback
 var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
     if (draw) console.log("set draw callback successfully");
     else console.log("error setting draw callback");
 
-// setup dummy inputs
-setInterval(function(){
+var newInput = function(){
     conway.stop();
-    for (var i=0; i<8; i++){
-        var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+    var min = data[n].min();
+    var max = data[n].max();
+    // console.log(min, max);
+    for (var i=0; i<data[n].length; i++){
+        // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+        var pct = map(data[n][i], min, max, 0, 0.5);
+        // console.log(pct);
         conway.setInput(i.toString(), pct);
         console.log("set conway input "+i+" to pct: "+pct);
     }
+    if (n < data.length - 1) n++;
+    else n = 0;
     conway.start();
-}, 15000); // every 15 sec, 8 new inputs ranged 0-1
+};
 
-// start game
-conway.start();
 
+var dataConnector = new DataConnector();    // Connect i/o
+var file = 'dummy_data/dummy_data.json';
+var data = jsonfile.readFileSync(file);     // Read dummy data
+initInputSections();
+initOutputSections();
+setInterval(newInput, 15000);               // every 15 sec, 8 new inputs ranged 0-1
+conway.start();                             // Start game
 
 
 /*---------- DATA CONNECTION  ----------*/
