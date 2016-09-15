@@ -235,6 +235,7 @@ var draw = conway.onDraw(function(err,data){ emitConwayGame(data);});
 
 var newInput = function(data){
     conway.stop();
+    console.log(data);
     var min = data.min();
     var max = data.max();
     // console.log(min, max);
@@ -269,12 +270,11 @@ var newInput = function(data){
 //     else n = 0;
 //     conway.start();
 // };
-
+// setInterval(newInput, 15000);               // every 15 sec, 8 new inputs ranged 0-1
 
 var dataConnector = new DataConnector();    // Connect i/o
 initInputSections();
 initOutputSections();
-setInterval(newInput, 15000);               // every 15 sec, 8 new inputs ranged 0-1
 conway.start();                             // Start game
 
 
