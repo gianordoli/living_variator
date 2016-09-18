@@ -44,7 +44,7 @@ button{
 	}
 
 	#ui .control-parent h6{
-		color: #AAA;
+		color: rgba(0, 0, 0, 0.36);
 		width: 60px;
 	}
 

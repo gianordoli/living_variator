@@ -5,6 +5,10 @@ var app = app || {};
 app.main = (function(simulation) {
 	console.log('Your code starts here!');
 
+	var map = function(n, start1, stop1, start2, stop2) {
+	  return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
+	};	
+
 	var socket;
 	var body = document.getElementsByTagName('body')[0];	
 	//var img = document.createElement('img');
@@ -170,36 +174,37 @@ app.main = (function(simulation) {
 	function updateViz(data){
 		// console.log('Called updateViz');
 		// console.log(data);
-		for(var prop in data){
+		for(var i = 0; i < data.length; i++){
 			
-			var container = $("#"+prop);
+			var container = $("#"+data[i]["control"]);
+			// console.log(container);
 
 			if(container.length > 0){
 				
 				var color;
-				if(control.indexOf('water') > -1){
+				if(data[i]["control"].indexOf('water') > -1){
 					color = {
 						red: 0,
 						green: 100,
 						blue: 255
 					};
-				}else if(control.indexOf('light') > -1){
+				}else if(data[i]["control"].indexOf('light') > -1){
 					color = {
 						red: 255,
 						green: 180,
 						blue: 0
 					};					
-				}else if(control.indexOf('heating') > -1){
+				}else if(data[i]["control"].indexOf('heating') > -1){
 					color = {
 						red: 255,
 						green: 0,
 						blue: 0
 					};					
-				}else if(control.indexOf('AC') > -1){
+				}else if(data[i]["control"].indexOf('AC') > -1){
 					color = {
-						red: 0,
-						green: 0,
-						blue: 0
+						red: 50,
+						green: 50,
+						blue: 70
 					};
 				}
 				$(container)
@@ -207,7 +212,7 @@ app.main = (function(simulation) {
 						'background-color': 'rgba('+color['red']+','+
 													color['green']+','+
 													color['blue']+','+
-													(data[prop]['outputFinalValue']*5)+')'
+													map(data[i]['outputFinalValue'], 0, 255, 0, 1)+')'
 					});
 			}
 		}	
