@@ -174,36 +174,6 @@ io.on('connection', function(socket) {
     /*--------------------------------------------------------------*/
 });
 
-/*---------- DATA INPUT  ----------*/
-// var file = 'dummy_data/Incucyte_Hela_GFP_pilot_08_24_2016.json';
-// var data = jsonfile.readFileSync(file);
-// Let's simulate a data update
-// setInterval(dataUpdate, 1000);
-
-// var currData = [];
-// var n = 0;
-// function dataUpdate(){
-    // NEED TO CONNECT THIS TO TYLER'S SIM
-
-    // var column = inputs[0];
-    // // console.log(data[n]);
-    // var newObj = {};
-    // // Let's constrain our inputs to the 'A' columns
-    // for(var prop in data[n]){
-    //     if(inputs.indexOf(prop) > -1){
-    //         newObj[prop] = data[n][prop];
-    //     }
-    // }
-    // newObj['Date Time'] = data[n]['Date Time'];
-    // // console.log(newObj);
-    // io.sockets.emit('data-update', newObj);
-    // if(n < data.length - 1){
-    //     n++;
-    // }else{
-    //     n = 0;
-    // }
-// }
-
 
 /*---------- CONWAY GAME ----------*/
 
