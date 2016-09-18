@@ -69,9 +69,19 @@ app.main = (function(simulation) {
 		        		})						
 						;
 				}
+
+				var frequency = $("<div></div>")
+				var frequencySlider = $("<input type='range' class='frequency' min='-100' max='1'/>")
+					.change(function(){
+						handleSliderChange(this);
+					})
+					;
+				$(frequency).append(frequencySlider).append("<span></span>");
+
 				$(divOutput)
 					.append('<h6>OUTPUT</h6>')
 					.append(dropdown)
+					.append(frequency)
 					.append('<ul class="data-output"></ul>')
 					;
 
@@ -92,8 +102,7 @@ app.main = (function(simulation) {
 					;
 			}
 
-			$(ui)
-				.append('<button id="bt-update">Update</button>')
+			var updateButton = $('<button id="bt-update">Update</button>')
 				.off('click')
 				.on('click', function(){
 
@@ -103,7 +112,6 @@ app.main = (function(simulation) {
 					var parents = $('.control-parent');
 
 					for(var i = 0; i < parents.length; i++){
-						var select = $(parents[i]).find("select");
 				        // updateObject = {
 				        //     control: "water-1",
 				        //     outputIndex: 0-15,
@@ -112,9 +120,9 @@ app.main = (function(simulation) {
 				        // }
 						updatedConnections.push({
 							control: $(parents[i]).attr('id'),
-							outputIndex: $(select).val(),
+							outputIndex: $(parents[i]).find("select").val(),
 							outputIntensity: 1,
-							frequency:  1
+							frequency:  Math.abs(parseInt($(parents[i]).find(".frequency").val()))
 						});						
 					}
 					console.log(updatedConnections);
@@ -122,19 +130,25 @@ app.main = (function(simulation) {
 				})
 				;
 
+			$(ui).append(updateButton);
 			$(ui).appendTo('body')	
 
-			updateDropdowns();
+			updateUI();
 		}
 
-		function updateDropdowns(){
-	        // Updating dropdowns based on data read from server	
+		function updateUI(){
+			console.log("Called updateUI.");
+	        // Updating UI controls based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
-	        	var dropdown = $('#'+connections[i]['control'])
-	        		.find("select")
-	        		;
+	        	var container = $('#'+connections[i]['control']);
+	        	console.log(container);
+	        	var dropdown = $(container).find("select");
 	        	$(dropdown).val(connections[i]['outputIndex']);
 	        	handleDropdownChange(dropdown);
+				
+				var slider = $(container).find("input[type='range']");
+	        	$(slider).val(- connections[i]['frequency']);
+	        	handleSliderChange(slider);
 	        }
 		}
 
@@ -149,16 +163,21 @@ app.main = (function(simulation) {
 				}
 			}
 		}
+
+		function handleSliderChange(obj){
+			$(obj).parent().children("span").html("1/" + Math.abs($(obj).val()));
+		}
 	}
 
 	function updateViz(data){
 		// console.log('Called updateViz');
 		// console.log(data);
 		for(var prop in data){
-			var dropdown = $('option[value="'+prop+'"][selected="selected"]');
+			
+			var container = $("#"+prop);
 
-			if(dropdown.length > 0){
-				var control = $(dropdown).parent().parent().parent().attr('id');
+			if(container.length > 0){
+				
 				var color;
 				if(control.indexOf('water') > -1){
 					color = {
@@ -185,15 +204,12 @@ app.main = (function(simulation) {
 						blue: 0
 					};
 				}
-				var container = $(dropdown)
-					.parent()
-					.parent()
-					.parent()
+				$(container)
 					.css({
 						'background-color': 'rgba('+color['red']+','+
 													color['green']+','+
 													color['blue']+','+
-													(data[prop]['pct']*5)+')'
+													(data[prop]['outputFinalValue']*5)+')'
 					});
 			}
 		}	
@@ -220,9 +236,10 @@ app.main = (function(simulation) {
 
 			simulation.drawCellData(data, ctx);
 			simulation.drawOutputGraph(data, graphCtx); // draw output graph for smooth testing
-			
+			// console.log(data["connections"]);
+			updateViz(data["connections"]);
 			// appendData(data['output']);
-			updateViz(data['output']);
+			
 			//simulation.drawCellData(data.buffer, data.info, ctx);
 
 			/*
