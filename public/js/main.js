@@ -110,7 +110,7 @@ app.main = (function(simulation) {
 							control: $(selects[i]).attr('id'),
 							outputIndex: $(selects[i]).val(),
 							outputIntensity: 1,
-							frequency:  1000
+							frequency:  1
 						});						
 					}
 					console.log(updatedConnections);
