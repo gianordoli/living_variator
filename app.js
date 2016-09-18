@@ -39,9 +39,6 @@ app.get('/get-output', function(request, response){
 				' request for ' + request.url);
 
 	var connections = dataConnector.getConnections();
-	var data = conway.getOutputs();
-	// console.log("score: ", score);
-
 	// Response object
 	var obj = {};
 	obj["output"] = {};
@@ -49,13 +46,7 @@ app.get('/get-output', function(request, response){
 
 	for(var i = 0; i < connections.length; i++){
 		var control = connections[i]["control"];
-		var output = connections[i]["output"];
-		// console.log(output);
-		// console.log(typeof output);  // number
-		// console.log(data["output"]["0"]);
-		var outputValue = data[output.toString()]["outMap"];
-		// console.log(outputValue);
-		obj["output"][control] = outputValue;
+		obj["output"][control] = connections[i]["outputFinalValue"];
 	}
 	// console.log(obj);
 	response.json(obj);
