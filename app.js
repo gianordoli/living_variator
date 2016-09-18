@@ -225,8 +225,7 @@ var initOutputSections = function(){ // init output sections (10 horizontal divi
 
 // setup draw callback
 var draw = conway.onDraw(function(err,data){
-	console.log(data["frameCount"]);
-	// dataConnector.updateValues(data);
+	dataConnector.updateValues(data["output"], data["frameCount"]);
 	emitConwayGame(data);
 });
 if (draw) console.log("set draw callback successfully");
@@ -295,13 +294,14 @@ function DataConnector(){
 	//         outputOriginalValue: 0-255, // Conway's outMap
 	//         outputIntensity: 0.1-10,    // Intensity multiplier
 	//         outputFinalValue: 0-255,    // outputOriginalValue * outputIntensity
-	//         frequency: 1-5,		       // output update frequency
+	//         frequency: 1-10,		       // output update frequency
 	//     }, ...
 	// ];
 
 	// this.assignConnections = function(obj){
 	this.setup = function(obj){
 		for(var i = 0; i < controls.length; i++){
+			var randomFrequency = (i === 9) ? (100) : (1);
 			var connectionObj = {
 				outputIndex: i,
 				control: controls[i],
@@ -309,20 +309,26 @@ function DataConnector(){
 				outputOriginalValue: 0,
 				outputIntensity: 1,
 				outputFinalValue: 0,
-				frequency: 1     
+				frequency: randomFrequency
 			};
 			connections.push(connectionObj);
 		}
 	};
 
-	function updateValues(obj){
-		// for(var i = 0; i < connections.length; i++){
-		// 	if(connections[i]["frequency"])
-		// }
-		// var data = conway.getOutputs();
-		// this.["outputOriginalValue"] = data[this["outputIndex"].toString()]["outMap"];
-		// console.log(this.["outputOriginalValue"]);
-	}
+	this.updateValues = function(data, frameCount){
+		// console.log("Called updateValues");
+		// console.log("data: ", data);
+		// console.log("frameCount: ", frameCount);
+		for(var i = 0; i < connections.length; i++){
+			var connectionObj = connections[i];
+			// Update to connections will be based on their frequency
+			if(frameCount % connectionObj["frequency"] === 0){
+				var outputIndex = connectionObj["outputIndex"].toString();
+				connectionObj["outputOriginalValue"] = data[outputIndex]["outMap"];
+			}
+			console.log(i, connectionObj["outputOriginalValue"]);
+		}
+	};
 
 	this.updateParameters = function(obj){
 		// updateObject = {
