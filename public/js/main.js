@@ -98,10 +98,19 @@ app.main = (function(simulation) {
 
 					var updatedConnections = [];
 					var selects = $('select');
+
 					for(var i = 0; i < selects.length; i++){
+				        // updateObject = {
+				        //     control: "water-1",
+				        //     outputIndex: 0-15,
+				        //     outputIntensity: 0.1-10,
+				        //     frequency: 1000-5000
+				        // }						
 						updatedConnections.push({
-							output: $(selects[i]).val(),
-							control: $(selects[i]).attr('id') 
+							control: $(selects[i]).attr('id'),
+							outputIndex: $(selects[i]).val(),
+							outputIntensity: 1,
+							frequency:  1000
 						});						
 					}
 					console.log(updatedConnections);
@@ -121,7 +130,7 @@ app.main = (function(simulation) {
 	        			handleChange(this);
 	        		})
 	        		;
-	        	$(dropdown).val(connections[i]['output']);
+	        	$(dropdown).val(connections[i]['outputIndex']);
 	        	handleChange(dropdown);
 	        }
 	        function handleChange(obj){
@@ -139,8 +148,8 @@ app.main = (function(simulation) {
 	}
 
 	function updateViz(data){
-		console.log('Called updateViz');
-		console.log(data);
+		// console.log('Called updateViz');
+		// console.log(data);
 		for(var prop in data){
 			var dropdown = $('option[value="'+prop+'"][selected="selected"]');
 

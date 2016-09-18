@@ -169,7 +169,7 @@ io.on('connection', function(socket) {
     // Receives connection (input to control) update from client
     socket.on('update-connections', function(data){
         // console.log(data);
-        dataConnector.assignConnections(data);
+        dataConnector.updateParameters(data);
     });
     /*--------------------------------------------------------------*/
 });
@@ -248,26 +248,26 @@ var newInput = function(data){
 
 
 // DUMMY DATA
-// var file = 'dummy_data/dummy_data.json';
-// var data = jsonfile.readFileSync(file);     // Read dummy data
-// var n = 0;
-// var newInput = function(){
-//     conway.stop();
-//     var min = data[n].min();
-//     var max = data[n].max();
-//     // console.log(min, max);
-//     for (var i=0; i<data[n].length; i++){
-//         // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
-//         var pct = map(data[n][i], min, max, 0, 0.5);
-//         // console.log(pct);
-//         conway.setInput(i.toString(), pct);
-//         console.log("set conway input "+i+" to pct: "+pct);
-//     }
-//     if (n < data.length - 1) n++;
-//     else n = 0;
-//     conway.start();
-// };
-// setInterval(newInput, 15000);               // every 15 sec, 8 new inputs ranged 0-1
+var file = 'dummy_data/dummy_data.json';
+var data = jsonfile.readFileSync(file);     // Read dummy data
+var n = 0;
+var newInput = function(){
+    conway.stop();
+    var min = data[n].min();
+    var max = data[n].max();
+    // console.log(min, max);
+    for (var i=0; i<data[n].length; i++){
+        // var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+        var pct = map(data[n][i], min, max, 0, 0.5);
+        // console.log(pct);
+        conway.setInput(i.toString(), pct);
+        console.log("set conway input "+i+" to pct: "+pct);
+    }
+    if (n < data.length - 1) n++;
+    else n = 0;
+    conway.start();
+};
+setInterval(newInput, 15000);               // every 15 sec, 16 new inputs ranged 0-1
 
 var dataConnector = new DataConnector();    // Connect i/o
 initInputSections();
@@ -285,18 +285,60 @@ function DataConnector(){
                     'heating'
                     ];
     var connections = [];
-    
-    this.assignConnections = function(obj){
-        if(!obj){
-            // Assigning random connections to start
-            for(var i = 0; i < controls.length; i++){
-                connections.push({
-                    output: i,
-                    control: controls[i]
-                });
-            }
-        }else{
-            connections = obj;
+    // connections = [
+    //     {
+    //         control: "water-1",         // List of controls
+    //         outputIndex: 0-15,          // Conway's output index
+    //         outputOriginalValue: 0-255, // Conway's outMap
+    //         outputIntensity: 0.1-10,    // Intensity multiplier
+    //         outputFinalValue: 0-255,    // outputOriginalValue * outputIntensity
+    //         frequency: 1000-5000,       // output update frequency
+    //         interval: null,             // setInterval object
+    //         getOutput: function(){
+    //             clearInterval(this.interval);
+    //             console.log(this);
+    //         }
+    //     }, ...
+    // ];
+
+    // this.assignConnections = function(obj){
+    this.setup = function(obj){
+        for(var i = 0; i < controls.length; i++){
+            connections.push({
+                outputIndex: i,
+                control: controls[i],
+                outputIndex: i,
+                outputOriginalValue: 0,
+                outputIntensity: 1,
+                outputFinalValue: 0,
+                frequency: 1000,
+                interval: null,
+                updateValues: function(){
+                    clearInterval(this.interval);
+                    console.log(this);
+                    this.interval = setInterval(function(){
+                        updateValues(this);
+                    }, this.frequency);
+                }
+            });
+        }
+    };
+
+    function updateValues(obj){
+        // var data = conway.getOutputs();
+        // this.["outputOriginalValue"] = data[this["outputIndex"].toString()]["outMap"];
+        // console.log(this.["outputOriginalValue"]);
+    }
+
+    this.updateParameters = function(obj){
+        // updateObject = {
+        //     control: "water-1",
+        //     outputIndex: 0-15,
+        //     outputIntensity: 0.1-10,
+        //     frequency: 1000-5000
+        // }
+        for(prop in obj){
+            this[prop] = obj[prop];
         }
     };
 
@@ -308,7 +350,7 @@ function DataConnector(){
         return controls;
     };
 
-    this.assignConnections();
+    this.setup();
 }
 
 
