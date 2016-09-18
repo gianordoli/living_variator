@@ -8,6 +8,8 @@ var fs = require('fs');
 
 function Conway (width, height, framerate, wrap) {
 
+	this.frameCount = 0;
+
 	this.width = isNaN(width) ? 100 : width;
 	this.height = isNaN(height) ? 80 : height;
 	this.targetFps = isNaN(framerate) ? 30 : framerate;
@@ -88,6 +90,8 @@ Conway.prototype.setup = function() {
 
 Conway.prototype.update = function(){
 
+	this.frameCount++;
+
 	var err = undefined;
 
 	for (var i=0; i<this.cells.length; i++){
@@ -134,7 +138,8 @@ Conway.prototype.update = function(){
            	input: this.input,
            	output: this.output,
            	score: this.score,
-           	fps: this.fps.fps
+           	fps: this.fps.fps,
+           	frameCount: this.frameCount
         }
 	this.draw(err,data);
 
