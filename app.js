@@ -323,7 +323,7 @@ function DataConnector(){
 				connectionObj["outputFinalValue"] = connectionObj["outputOriginalValue"] * connectionObj["outputIntensity"];
 				connectionObj["outputFinalValue"] = Math.round(clamp(connectionObj["outputFinalValue"], 0, 255));
 			}
-			console.log(i, connectionObj["outputOriginalValue"], connectionObj["outputIntensity"], connectionObj["frequency"], connectionObj["outputFinalValue"]);
+			// console.log(i, connectionObj["outputOriginalValue"], connectionObj["outputIntensity"], connectionObj["frequency"], connectionObj["outputFinalValue"]);
 		}
 	};
 
