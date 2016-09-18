@@ -55,7 +55,7 @@ app.main = (function(simulation) {
 					.append(dropdown);
 
 				var frequencyDiv = $("<div></div>")
-				var frequencySlider = $("<input type='range' class='frequency' min='-100' max='1'/>")
+				var frequencySlider = $("<input type='range' class='frequency' min='-100' max='0' step='10'/>")
 					.change(function(){
 						handleSliderChange(this);
 					})
@@ -64,10 +64,21 @@ app.main = (function(simulation) {
 					.append(frequencySlider)
 					.append("<span></span>");
 
+				var intensityDiv = $("<div></div>")
+				var intensitySlider = $("<input type='range' class='intensity' min='-1' max='1' step='0.1'/>")
+					.change(function(){
+						handleSliderChange(this);
+					})
+					;
+				$(intensityDiv).append('<h6>INTENSITY</h6>')
+					.append(intensitySlider)
+					.append("<span></span>");
+
 				$(controlParent)
 					.append(controlDiv)
 					.append(outputDiv)
 					.append(frequencyDiv)
+					.append(intensityDiv)
 					;
 					
 				$(controlParent).appendTo(ui);
@@ -89,12 +100,13 @@ app.main = (function(simulation) {
 				        //     outputIntensity: 0.1-10,
 				        //     frequency: 1-100
 				        // }
-						updatedConnections.push({
-							control: $(parents[i]).attr('id'),
-							outputIndex: $(parents[i]).find("select").val(),
-							outputIntensity: 1,
-							frequency:  Math.abs(parseInt($(parents[i]).find(".frequency").val()))
-						});						
+				        var updateObj = {};
+				        updateObj["control"] = $(parents[i]).attr('id');
+				        updateObj["outputIndex"] = $(parents[i]).find("select").val();
+				        updateObj["outputIntensity"] = Math.pow(10, $(parents[i]).find(".intensity").val());
+				        var frequency = Math.abs(parseInt($(parents[i]).find(".frequency").val()));
+				        updateObj["frequency"] = (frequency === 0) ? (1) : (frequency);
+						updatedConnections.push(updateObj);
 					}
 					console.log(updatedConnections);
 					socket.emit('update-connections', updatedConnections);
@@ -112,14 +124,22 @@ app.main = (function(simulation) {
 	        // Updating UI controls based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
 	        	var container = $('#'+connections[i]['control']);
-	        	console.log(container);
+	        	// console.log(container);
 	        	var dropdown = $(container).find("select");
 	        	$(dropdown).val(connections[i]['outputIndex']);
 	        	handleDropdownChange(dropdown);
 				
-				var slider = $(container).find("input[type='range']");
-	        	$(slider).val(- connections[i]['frequency']);
-	        	handleSliderChange(slider);
+				var frequencySlider = $(container).find(".frequency");
+	        	$(frequencySlider).val(-connections[i]['frequency']);
+	        	handleSliderChange(frequencySlider);
+
+				var intensitySlider = $(container).find(".intensity");
+	        	$(intensitySlider).val(getBaseLog(10, connections[i]['outputIntensity']));
+	        	handleSliderChange(intensitySlider);
+
+				function getBaseLog(x, y) {
+				  return Math.log(y) / Math.log(x);
+				}	        	
 	        }
 		}
 
@@ -136,7 +156,14 @@ app.main = (function(simulation) {
 		}
 
 		function handleSliderChange(obj){
-			$(obj).parent().children("span").html("1/" + Math.abs($(obj).val()));
+			var valueString;
+			if($(obj).attr("class") === "intensity"){
+				valueString = $(obj).val();
+			}else if($(obj).attr("class") === "frequency"){
+				var val = Math.abs($(obj).val());
+				valueString = (val === 0) ? ("1/1") : ("1/" + val);
+			}
+			$(obj).parent().children("span").html(valueString);
 		}
 	}
 

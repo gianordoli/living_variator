@@ -45,6 +45,7 @@ button{
 
 	#ui .control-parent h6{
 		color: #AAA;
+		width: 60px;
 	}
 
 	#ui .control-parent input{
