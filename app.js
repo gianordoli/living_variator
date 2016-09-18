@@ -244,27 +244,27 @@ var newInput = function(data){
 };
 
 
-// DUMMY DATA
-var file = 'dummy_data/dummy_data.json';
-var data = jsonfile.readFileSync(file);     // Read dummy data
-var n = 0;
-var newInput = function(){
-	conway.stop();
-	var min = data[n].min();
-	var max = data[n].max();
-	// console.log(min, max);
-	for (var i=0; i<data[n].length; i++){
-		// var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
-		var pct = map(data[n][i], min, max, 0, 0.5);
-		// console.log(pct);
-		conway.setInput(i.toString(), pct);
-		console.log("set conway input "+i+" to pct: "+pct);
-	}
-	if (n < data.length - 1) n++;
-	else n = 0;
-	conway.start();
-};
-setInterval(newInput, 15000);               // every 15 sec, 16 new inputs ranged 0-1
+// // DUMMY DATA
+// var file = 'dummy_data/dummy_data.json';
+// var data = jsonfile.readFileSync(file);     // Read dummy data
+// var n = 0;
+// var newInput = function(){
+// 	conway.stop();
+// 	var min = data[n].min();
+// 	var max = data[n].max();
+// 	// console.log(min, max);
+// 	for (var i=0; i<data[n].length; i++){
+// 		// var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
+// 		var pct = map(data[n][i], min, max, 0, 0.5);
+// 		// console.log(pct);
+// 		conway.setInput(i.toString(), pct);
+// 		console.log("set conway input "+i+" to pct: "+pct);
+// 	}
+// 	if (n < data.length - 1) n++;
+// 	else n = 0;
+// 	conway.start();
+// };
+// setInterval(newInput, 15000);               // every 15 sec, 16 new inputs ranged 0-1
 
 var dataConnector = new DataConnector();    // Connect i/o
 initInputSections();

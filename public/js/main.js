@@ -107,7 +107,7 @@ app.main = (function(simulation) {
 				        var updateObj = {};
 				        updateObj["control"] = $(parents[i]).attr('id');
 				        updateObj["outputIndex"] = $(parents[i]).find("select").val();
-				        updateObj["outputIntensity"] = Math.pow(10, $(parents[i]).find(".intensity").val());
+				        updateObj["outputIntensity"] = Math.round(Math.pow(10, $(parents[i]).find(".intensity").val()) * 100)/100;
 				        var frequency = Math.abs(parseInt($(parents[i]).find(".frequency").val()));
 				        updateObj["frequency"] = (frequency === 0) ? (1) : (frequency);
 						updatedConnections.push(updateObj);
