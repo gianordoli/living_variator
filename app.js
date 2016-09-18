@@ -125,6 +125,9 @@ var map = function(n, start1, stop1, start2, stop2) {
   return ((n-start1)/(stop1-start1))*(stop2-start2)+start2;
 };
 
+var clamp = function(num, min, max) {
+  return Math.min(Math.max(num, min), max);
+};
 
 /*---------- SOCKET.IO  ----------*/
 
@@ -294,22 +297,22 @@ function DataConnector(){
 	//         outputOriginalValue: 0-255, // Conway's outMap
 	//         outputIntensity: 0.1-10,    // Intensity multiplier
 	//         outputFinalValue: 0-255,    // outputOriginalValue * outputIntensity
-	//         frequency: 1-10,		       // output update frequency
+	//         frequency: 1-100,	       // output update frequency, relative to frameCount
 	//     }, ...
 	// ];
 
-	// this.assignConnections = function(obj){
 	this.setup = function(obj){
 		for(var i = 0; i < controls.length; i++){
-			var randomFrequency = (i === 9) ? (100) : (1);
 			var connectionObj = {
 				outputIndex: i,
 				control: controls[i],
 				outputIndex: i,
 				outputOriginalValue: 0,
 				outputIntensity: 1,
+				// outputIntensity: Math.random()*10,
 				outputFinalValue: 0,
-				frequency: randomFrequency
+				frequency: 1
+				// frequency: (i === 9) ? (100) : (1)
 			};
 			connections.push(connectionObj);
 		}
@@ -325,8 +328,10 @@ function DataConnector(){
 			if(frameCount % connectionObj["frequency"] === 0){
 				var outputIndex = connectionObj["outputIndex"].toString();
 				connectionObj["outputOriginalValue"] = data[outputIndex]["outMap"];
+				connectionObj["outputFinalValue"] = connectionObj["outputOriginalValue"] * connectionObj["outputIntensity"];
+				connectionObj["outputFinalValue"] = Math.round(clamp(connectionObj["outputFinalValue"], 0, 255));
 			}
-			console.log(i, connectionObj["outputOriginalValue"]);
+			// console.log(i, connectionObj["outputOriginalValue"], connectionObj["outputIntensity"], connectionObj["outputFinalValue"]);
 		}
 	};
 

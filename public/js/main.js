@@ -104,7 +104,7 @@ app.main = (function(simulation) {
 				        //     control: "water-1",
 				        //     outputIndex: 0-15,
 				        //     outputIntensity: 0.1-10,
-				        //     frequency: 1000-5000
+				        //     frequency: 1-100
 				        // }						
 						updatedConnections.push({
 							control: $(selects[i]).attr('id'),
