@@ -14,26 +14,6 @@ app.main = (function(simulation) {
 	var graphCanvas = document.getElementById('outGraph');
 	var graphCtx = graphCanvas.getContext('2d');
 
-	// function appendData(data){
-	// 	console.log('Called appendData');
-	// 	console.log(data);
-	// 	for(var prop in data){
-	// 		var dropdown = $('option[value="'+prop+'"][selected="selected"]');
-
-	// 		if(dropdown.length > 0){
-	// 			// console.log(dropdown);
-	// 			var dataList = $(dropdown)
-	// 				.parent()
-	// 				.parent()
-	// 				.find('.data-output')
-	// 			dataList.prepend('<li>'+data[prop]['pct']+'</li>');
-	// 			if(dataList.children().length > 10){
-	// 				dataList.children().last().remove();
-	// 			}
-	// 		}
-	// 	}
-	// };
-
 	function drawUI(outputs, controls, connections){
 		console.log('Called drawUI');
 		console.log(outputs);
@@ -57,9 +37,11 @@ app.main = (function(simulation) {
 
 				var controlParent = $('<div class="control-parent" id="'+controls[i]+'"></div>');				
 
-				// output
-				var divOutput = $('<div class="output"></div>');
+				var controlDiv = $("<div></div>");
+				$(controlDiv).append('<h6>CONTROL</h6>')
+					.append('<span>'+controls[i]+'</span>');
 
+				var outputDiv = $("<div></div>");
 				var dropdown = $('<select></select>');
 				for(var j = 0; j < outputs.length; j++){
 					$(dropdown)
@@ -69,37 +51,26 @@ app.main = (function(simulation) {
 		        		})						
 						;
 				}
+				$(outputDiv).append('<h6>OUTPUT</h6>')
+					.append(dropdown);
 
-				var frequency = $("<div></div>")
+				var frequencyDiv = $("<div></div>")
 				var frequencySlider = $("<input type='range' class='frequency' min='-100' max='1'/>")
 					.change(function(){
 						handleSliderChange(this);
 					})
 					;
-				$(frequency).append(frequencySlider).append("<span></span>");
-
-				$(divOutput)
-					.append('<h6>OUTPUT</h6>')
-					.append(dropdown)
-					.append(frequency)
-					.append('<ul class="data-output"></ul>')
-					;
-
-				// control
-				var divControl = $('<div class="control"></div>');
-
-				$(divControl)
-					.append('<h6>CONTROL</h6>')
-					.append('<p>'+controls[i]+'</p>')
-					.append('<ul class="data-control"></ul>')
-					;
-					
+				$(frequencyDiv).append('<h6>FREQUENCY</h6>')
+					.append(frequencySlider)
+					.append("<span></span>");
 
 				$(controlParent)
-					.append(divOutput)
-					.append(divControl)
-					.appendTo(ui)
+					.append(controlDiv)
+					.append(outputDiv)
+					.append(frequencyDiv)
 					;
+					
+				$(controlParent).appendTo(ui);
 			}
 
 			var updateButton = $('<button id="bt-update">Update</button>')
