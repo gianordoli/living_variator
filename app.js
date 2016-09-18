@@ -326,15 +326,21 @@ function DataConnector(){
 		}
 	};
 
-	this.updateParameters = function(obj){
+	this.updateParameters = function(data){
 		// updateObject = {
 		//     control: "water-1",
 		//     outputIndex: 0-15,
 		//     outputIntensity: 0.1-10,
 		//     frequency: 1000-5000
 		// }
-		for(prop in obj){
-			this[prop] = obj[prop];
+		for(var i = 0; i < connections.length; i++){
+			for(var j = 0; j < data.length; j++){
+				if(connections[i]["control"] === data[j]["control"]){
+					for(prop in data[j]){
+						connections[i][prop] = data[j][prop];
+					}
+				}
+			}
 		}
 	};
 

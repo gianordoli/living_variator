@@ -55,15 +55,18 @@ app.main = (function(simulation) {
 
 			for(var i = 0; i < controls.length; i++){
 
-				var controlParent = $('<div class="control-parent"></div>');				
+				var controlParent = $('<div class="control-parent" id="'+controls[i]+'"></div>');				
 
 				// output
 				var divOutput = $('<div class="output"></div>');
 
-				var dropdown = $('<select id="'+controls[i]+'"></select>');
+				var dropdown = $('<select></select>');
 				for(var j = 0; j < outputs.length; j++){
 					$(dropdown)
 						.append('<option value="'+outputs[j]+'">'+outputs[j]+'</option>')
+		        		.change(function(){
+		        			handleDropdownChange(this);
+		        		})						
 						;
 				}
 				$(divOutput)
@@ -97,18 +100,19 @@ app.main = (function(simulation) {
 					$('.data-control, .data-output').empty();
 
 					var updatedConnections = [];
-					var selects = $('select');
+					var parents = $('.control-parent');
 
-					for(var i = 0; i < selects.length; i++){
+					for(var i = 0; i < parents.length; i++){
+						var select = $(parents[i]).find("select");
 				        // updateObject = {
 				        //     control: "water-1",
 				        //     outputIndex: 0-15,
 				        //     outputIntensity: 0.1-10,
 				        //     frequency: 1-100
-				        // }						
+				        // }
 						updatedConnections.push({
-							control: $(selects[i]).attr('id'),
-							outputIndex: $(selects[i]).val(),
+							control: $(parents[i]).attr('id'),
+							outputIndex: $(select).val(),
 							outputIntensity: 1,
 							frequency:  1
 						});						
@@ -116,34 +120,34 @@ app.main = (function(simulation) {
 					console.log(updatedConnections);
 					socket.emit('update-connections', updatedConnections);
 				})
-				.appendTo('body')
-				;				
+				;
 
-			update();
+			$(ui).appendTo('body')	
+
+			updateDropdowns();
 		}
 
-		function update(){
+		function updateDropdowns(){
 	        // Updating dropdowns based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
 	        	var dropdown = $('#'+connections[i]['control'])
-	        		.change(function(){
-	        			handleChange(this);
-	        		})
+	        		.find("select")
 	        		;
 	        	$(dropdown).val(connections[i]['outputIndex']);
-	        	handleChange(dropdown);
+	        	handleDropdownChange(dropdown);
 	        }
-	        function handleChange(obj){
-	        	$('.data-output').empty();
-    			var options = $(obj).find('option');
-    			for(var i = 0; i < options.length; i++){
-    				if($(options[i]).val() == $(obj).val()){
-						$(options[i]).attr('selected', true);
-    				}else{
-						$(options[i]).removeAttr('selected');
-    				}
-    			}
-	        }
+		}
+
+		function handleDropdownChange(obj){
+        	// $('.data-output').empty();
+			var options = $(obj).find('option');
+			for(var i = 0; i < options.length; i++){
+				if($(options[i]).val() === $(obj).val()){
+					$(options[i]).attr('selected', true);
+				}else{
+					$(options[i]).removeAttr('selected');
+				}
+			}
 		}
 	}
 
@@ -154,7 +158,7 @@ app.main = (function(simulation) {
 			var dropdown = $('option[value="'+prop+'"][selected="selected"]');
 
 			if(dropdown.length > 0){
-				var control = $(dropdown).parent().attr('id');
+				var control = $(dropdown).parent().parent().parent().attr('id');
 				var color;
 				if(control.indexOf('water') > -1){
 					color = {
