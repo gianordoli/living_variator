@@ -144,12 +144,12 @@ Conway.prototype.update = function(){
 	this.draw(err,data);
 
 	// log to file
-	var scoreLog = '';
-	for (var i=0; i<this.score.length; i++){
-		scoreLog+=this.score[i];
-	}
-	scoreLog+='\n';
-	fs.appendFile('score_log.txt',scoreLog);
+	// var scoreLog = '';
+	// for (var i=0; i<this.score.length; i++){
+	// 	scoreLog+=this.score[i];
+	// }
+	// scoreLog+='\n';
+	// fs.appendFile('score_log.txt',scoreLog);
 }
 
 // ------------------------------------------- "DRAW" CALLBACK ----------//
