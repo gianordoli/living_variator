@@ -18,7 +18,7 @@ app.main = (function(simulation, ChartMaker) {
 	var graphCanvas = document.getElementById('outGraph');
 	var graphCtx = graphCanvas.getContext('2d');
 
-	var charts = [];
+	var charts = {};
 
 	function drawUI(outputs, controls, connections){
 		console.log('Called drawUI');
@@ -122,11 +122,11 @@ app.main = (function(simulation, ChartMaker) {
 			$(ui).append(updateButton);
 			$(ui).appendTo('body')	
 
-			updateUI();
+			update();
 	        createCharts();
 		}
 
-		function updateUI(){
+		function update(){
 			console.log("Called updateUI.");
 	        // Updating UI controls based on data read from server	
 	        for(var i = 0; i < connections.length; i++){
@@ -154,8 +154,8 @@ app.main = (function(simulation, ChartMaker) {
 			var containers = document.getElementsByClassName("control-parent");
 			for(var i = 0; i < containers.length; i++){
 				var newChart = ChartMaker.makeChart(containers[i], containers[i].id);
+				charts[containers[i].id] = newChart;
 			}
-			// charts.push()
 		}
 
 		function handleDropdownChange(obj){
@@ -179,6 +179,15 @@ app.main = (function(simulation, ChartMaker) {
 				valueString = (val === 0) ? ("1/1") : ("1/" + val);
 			}
 			$(obj).parent().children("span").html(valueString);
+		}
+	}
+
+	function updateCharts(data){
+		// console.log('Called updateCharts');
+		// console.log(data);
+		for(var i = 0; i < data.length; i++){
+			var chart = charts[data[i]["control"]];
+			chart.update(data[i]);
 		}
 	}
 
@@ -252,6 +261,7 @@ app.main = (function(simulation, ChartMaker) {
 			simulation.drawOutputGraph(data, graphCtx); // draw output graph for smooth testing
 			// console.log(data["connections"]);
 			updateViz(data["connections"]);
+			updateCharts(data["connections"]);
 			// appendData(data['output']);
 			
 			//simulation.drawCellData(data.buffer, data.info, ctx);
