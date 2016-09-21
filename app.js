@@ -94,7 +94,16 @@ app.post('/send-input', function(request, response){
 
 	// If everything went right...
 	if(err === undefined){
-		newInput(input);
+		
+		// Everytime we get data from the API, clear the dummy data interval,
+		// and set up a new one. If the API inputs are constant, dummy data
+		// won't ever be called.
+		clearInterval(dummyLoop);
+		dummyLoop = setInterval(function(){
+			newInput(dummyData[n], "dummy");
+		}, dummyWaiting);
+
+		newInput(input, "api");
 		response.json("Received input: " + input);
 	}else{
 		console.log(err);
@@ -220,9 +229,12 @@ if (draw) console.log("set draw callback successfully");
 else console.log("error setting draw callback");
 
 
-var newInput = function(data){
+var newInput = function(data, source){
+	// console.log(data);
+	console.log(source);
+
 	conway.stop();
-	console.log(data);
+
 	var min = data.min();
 	var max = data.max();
 	// console.log(min, max);
@@ -233,31 +245,24 @@ var newInput = function(data){
 		conway.setInput(i.toString(), pct);
 		console.log("set conway input "+i+" to pct: "+pct);
 	}
+
+	if(source === "dummy"){
+		n++;
+		if(n >= dummyData.length) n = 0;
+		console.log(n);
+	}
+
 	conway.start();
 };
 
 
 // DUMMY DATA
-var file = 'dummy_data/dummy_data.json';
-var data = jsonfile.readFileSync(file);     // Read dummy data
 var n = 0;
-var newInput = function(){
-	conway.stop();
-	var min = data[n].min();
-	var max = data[n].max();
-	// console.log(min, max);
-	for (var i=0; i<data[n].length; i++){
-		// var pct = Math.random()*0.5; // 0 - 0.5 - anything over 0.5 less dynamic
-		var pct = map(data[n][i], min, max, 0, 0.5);
-		// console.log(pct);
-		conway.setInput(i.toString(), pct);
-		console.log("set conway input "+i+" to pct: "+pct);
-	}
-	if (n < data.length - 1) n++;
-	else n = 0;
-	conway.start();
-};
-setInterval(newInput, 15000);               // every 15 sec, 16 new inputs ranged 0-1
+var dummyWaiting = 60000;
+var dummyData = jsonfile.readFileSync('dummy_data/dummy_data.json');
+var dummyLoop = setInterval(function(){
+	newInput(dummyData[n], "dummy");
+}, dummyWaiting);
 
 var dataConnector = new DataConnector();    // Connect i/o
 initInputSections();
