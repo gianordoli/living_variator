@@ -31,7 +31,7 @@ button{
 
 	#ui .control-parent{
 		width: 240px;
-		height: 240px;
+		/*height: 240px;*/
 		display: inline-block;
 		border: 1px solid black;
 		padding: 10px;
@@ -59,3 +59,21 @@ button{
 		display: inline-block;
 		vertical-align: middle;
 	}
+
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+text{
+	font-size: 8px;
+}
+
+.line {
+  fill: none;
+  stroke: black;
+  stroke-width: 1.5px;
+}
