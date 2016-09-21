@@ -151,13 +151,6 @@ io.on('connection', function(socket) {
 		io.sockets.emit('bye', 'See you, ' + socket.id + '!');
 		connectedUsers --;
 		console.log('Connected users: ' + connectedUsers);
-	});    
-
-	socket.on('msg-to-server', function(data) {
-		io.sockets.emit('msg-to-clients', {
-			id: socket.id,
-			msg: data
-		});
 	});
 
 	// Receives connection (input to control) update from client

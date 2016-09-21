@@ -2,7 +2,7 @@
 
 var app = app || {};
 
-app.main = (function(simulation) {
+app.main = (function(simulation, ChartMaker) {
 	console.log('Your code starts here!');
 
 	var map = function(n, start1, stop1, start2, stop2) {
@@ -17,6 +17,8 @@ app.main = (function(simulation) {
 	var ctx = canvas.getContext('2d');
 	var graphCanvas = document.getElementById('outGraph');
 	var graphCtx = graphCanvas.getContext('2d');
+
+	var charts = [];
 
 	function drawUI(outputs, controls, connections){
 		console.log('Called drawUI');
@@ -121,6 +123,7 @@ app.main = (function(simulation) {
 			$(ui).appendTo('body')	
 
 			updateUI();
+	        createCharts();
 		}
 
 		function updateUI(){
@@ -145,6 +148,14 @@ app.main = (function(simulation) {
 				  return Math.log(y) / Math.log(x);
 				}	        	
 	        }
+		}
+
+		function createCharts(){
+			var containers = document.getElementsByClassName("control-parent");
+			for(var i = 0; i < containers.length; i++){
+				var newChart = ChartMaker.makeChart(containers[i], containers[i].id);
+			}
+			// charts.push()
 		}
 
 		function handleDropdownChange(obj){
@@ -286,6 +297,6 @@ app.main = (function(simulation) {
 		init: init
 	};
 
-})(simulation);
+})(simulation, ChartMaker);
 
 window.addEventListener('DOMContentLoaded', app.main.init);
