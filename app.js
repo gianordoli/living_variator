@@ -43,6 +43,7 @@ app.get('/get-output', function(request, response){
 	var obj = {};
 	obj["output"] = {};
 	obj["score"] = conway.score;
+	obj["last-input-source"] = lastInputSource;
 
 	for(var i = 0; i < connections.length; i++){
 		var control = connections[i]["control"];
@@ -231,9 +232,11 @@ else console.log("error setting draw callback");
 
 var newInput = function(data, source){
 	// console.log(data);
-	console.log(source);
+	// console.log(source);
 
 	conway.stop();
+
+	lastInputSource = source;
 
 	var min = data.min();
 	var max = data.max();
@@ -257,6 +260,7 @@ var newInput = function(data, source){
 
 
 // DUMMY DATA
+var lastInputSource;
 var n = 0;
 var dummyWaiting = 60000;
 var dummyData = jsonfile.readFileSync('dummy_data/dummy_data.json');
