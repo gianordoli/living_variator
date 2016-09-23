@@ -34,6 +34,27 @@ var io = require('socket.io')(server);
 
 
 /*-------------------- ROUTES  --------------------*/
+app.get('/get-sound-output', function(request, response){
+	console.log('The client just sent a ' + request.method +
+				' request for ' + request.url);
+
+	var connections = dataConnector.getConnections();
+	// Response object
+	var obj = {};
+	obj["output"] = {};
+	obj["score"] = scoreBuffer;
+	obj["last-input-source"] = lastInputSource;
+
+	for(var i = 0; i < connections.length; i++){
+		var control = connections[i]["control"];
+		obj["output"][control] = connections[i]["outputFinalValue"];
+	}
+	// console.log(obj);
+	response.json(obj);
+
+	scoreBuffer = [];
+});
+
 app.get('/get-output', function(request, response){
 	console.log('The client just sent a ' + request.method +
 				' request for ' + request.url);
@@ -42,7 +63,7 @@ app.get('/get-output', function(request, response){
 	// Response object
 	var obj = {};
 	obj["output"] = {};
-	obj["score"] = conway.score;
+	// obj["score"] = conway.score;
 	obj["last-input-source"] = lastInputSource;
 
 	for(var i = 0; i < connections.length; i++){
@@ -223,6 +244,7 @@ var initOutputSections = function(){ // init output sections (10 horizontal divi
 
 // setup draw callback
 var draw = conway.onDraw(function(err,data){
+	updateScore(data["score"]);
 	dataConnector.updateValues(data["output"], data["frameCount"]);
 	emitConwayGame(data);
 });
@@ -272,6 +294,17 @@ var dataConnector = new DataConnector();    // Connect i/o
 initInputSections();
 initOutputSections();
 conway.start();                             // Start game
+
+
+/*---------- SCORE  ----------*/
+var scoreBuffer = [];
+function updateScore(data){
+	var maxBufferSize = 1800;
+	scoreBuffer.push(data);
+	if(scoreBuffer.length > maxBufferSize){
+		scoreBuffer.splice(0, 1);
+	}
+}
 
 
 /*---------- DATA CONNECTION  ----------*/
