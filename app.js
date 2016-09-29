@@ -4,6 +4,7 @@ var    express		= require('express')
 	,  fs 			= require('fs')
 	,  jsonfile     = require('jsonfile')
 	// Canvas 		= require('canvas')
+	,	_ 			= require('lodash')
 	;
 
 var app = express();						// our Express app
@@ -244,6 +245,7 @@ var initOutputSections = function(){ // init output sections (10 horizontal divi
 
 // setup draw callback
 var draw = conway.onDraw(function(err,data){
+	// console.log(data["score"].toString());
 	updateScore(data["score"]);
 	dataConnector.updateValues(data["output"], data["frameCount"]);
 	emitConwayGame(data);
@@ -299,11 +301,24 @@ conway.start();                             // Start game
 /*---------- SCORE  ----------*/
 var scoreBuffer = [];
 function updateScore(data){
-	var maxBufferSize = 1800;
-	scoreBuffer.push(data);
+	// console.log(data.toString());
+	// var maxBufferSize = 5;
+
+	var maxBufferSize = 1800;	
+
+	// scoreBuffer.push(data);
+	scoreBuffer.push(_.cloneDeep(data));
+	// console.log(scoreBuffer.length, maxBufferSize);
 	if(scoreBuffer.length > maxBufferSize){
 		scoreBuffer.splice(0, 1);
 	}
+	// console.log(scoreBuffer[scoreBuffer.length - 1].toString());
+	// console.log(_.difference(data, scoreBuffer[scoreBuffer.length-1]));
+	// console.log(_.difference(scoreBuffer[0], scoreBuffer[scoreBuffer.length-1]));
+
+	// for(var i = 0; i < scoreBuffer.length; i++){
+	// 	console.log(scoreBuffer[i].toString());	
+	// }
 }
 
 
